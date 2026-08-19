@@ -83,10 +83,98 @@ def post_video_xhs(title,files,tags,account_file,category=TencentZoneTypes.LIFES
             print(f"视频文件名：{file}")
             print(f"标题：{title}")
             print(f"Hashtag：{tags}")
-            app = XiaoHongShuVideo(title, file, tags, publish_datetimes, cookie)
-            asyncio.run(app.main(), debug=False)
+from uploader.facebook_uploader.main import FacebookVideo
+from uploader.instagram_uploader.main import InstagramVideo
+from uploader.twitter_uploader.main import TwitterVideo
+from uploader.threads_uploader.main import ThreadsVideo
+from uploader.pinterest_uploader.main import PinterestVideo
+from uploader.zalo_uploader.main import ZaloVideo
+from uploader.youtube_uploader.main import YouTubeVideo
+from uploader.tk_uploader.main import TiktokVideo
 
 
+def _resolve_paths(files, account_files):
+    acc_paths = []
+    for acc in account_files:
+        p1 = Path(BASE_DIR / "cookiesFile" / acc)
+        p2 = Path(BASE_DIR / "cookies" / acc)
+        acc_paths.append(p1 if p1.exists() else p2)
 
-# post_video("333",["demo.mp4"],"d","d")
-# post_video_DouYin("333",["demo.mp4"],"d","d")
+    video_paths = []
+    for f in files:
+        p1 = Path(BASE_DIR / "videoFile" / f)
+        p2 = Path(BASE_DIR / "videos" / f)
+        video_paths.append(p1 if p1.exists() else p2)
+
+    return video_paths, acc_paths
+
+
+def post_video_facebook(title, files, tags, account_file, enableTimer=False, videos_per_day=1, daily_times=None, start_days=0, is_reel=True):
+    video_paths, acc_paths = _resolve_paths(files, account_file)
+    publish_datetimes = generate_schedule_time_next_day(len(video_paths), videos_per_day, daily_times, start_days) if enableTimer else [0] * len(video_paths)
+    for index, file in enumerate(video_paths):
+        for cookie in acc_paths:
+            app = FacebookVideo(title, str(file), tags, publish_datetimes[index], str(cookie), is_reel=is_reel)
+            asyncio.run(app.upload())
+
+
+def post_video_instagram(title, files, tags, account_file, enableTimer=False, videos_per_day=1, daily_times=None, start_days=0):
+    video_paths, acc_paths = _resolve_paths(files, account_file)
+    publish_datetimes = generate_schedule_time_next_day(len(video_paths), videos_per_day, daily_times, start_days) if enableTimer else [0] * len(video_paths)
+    for index, file in enumerate(video_paths):
+        for cookie in acc_paths:
+            app = InstagramVideo(title, str(file), tags, publish_datetimes[index], str(cookie))
+            asyncio.run(app.upload())
+
+
+def post_video_twitter(title, files, tags, account_file, enableTimer=False, videos_per_day=1, daily_times=None, start_days=0):
+    video_paths, acc_paths = _resolve_paths(files, account_file)
+    publish_datetimes = generate_schedule_time_next_day(len(video_paths), videos_per_day, daily_times, start_days) if enableTimer else [0] * len(video_paths)
+    for index, file in enumerate(video_paths):
+        for cookie in acc_paths:
+            app = TwitterVideo(title, str(file), tags, publish_datetimes[index], str(cookie))
+            asyncio.run(app.upload())
+
+
+def post_video_threads(title, files, tags, account_file, enableTimer=False, videos_per_day=1, daily_times=None, start_days=0):
+    video_paths, acc_paths = _resolve_paths(files, account_file)
+    publish_datetimes = generate_schedule_time_next_day(len(video_paths), videos_per_day, daily_times, start_days) if enableTimer else [0] * len(video_paths)
+    for index, file in enumerate(video_paths):
+        for cookie in acc_paths:
+            app = ThreadsVideo(title, str(file), tags, publish_datetimes[index], str(cookie))
+            asyncio.run(app.upload())
+
+
+def post_video_pinterest(title, files, tags, account_file, enableTimer=False, videos_per_day=1, daily_times=None, start_days=0, link="", board=""):
+    video_paths, acc_paths = _resolve_paths(files, account_file)
+    publish_datetimes = generate_schedule_time_next_day(len(video_paths), videos_per_day, daily_times, start_days) if enableTimer else [0] * len(video_paths)
+    for index, file in enumerate(video_paths):
+        for cookie in acc_paths:
+            app = PinterestVideo(title, str(file), tags, publish_datetimes[index], str(cookie), link=link, board=board)
+            asyncio.run(app.upload())
+
+
+def post_video_zalo(title, files, tags, account_file, enableTimer=False, videos_per_day=1, daily_times=None, start_days=0, category=""):
+    video_paths, acc_paths = _resolve_paths(files, account_file)
+    publish_datetimes = generate_schedule_time_next_day(len(video_paths), videos_per_day, daily_times, start_days) if enableTimer else [0] * len(video_paths)
+    for index, file in enumerate(video_paths):
+        for cookie in acc_paths:
+            app = ZaloVideo(title, str(file), tags, publish_datetimes[index], str(cookie), category=category)
+            asyncio.run(app.upload())
+
+
+def post_video_youtube(title, files, tags, account_file, enableTimer=False, videos_per_day=1, daily_times=None, start_days=0, thumbnail_path=None, playlist=None, visibility="public"):
+    video_paths, acc_paths = _resolve_paths(files, account_file)
+    for index, file in enumerate(video_paths):
+        for cookie in acc_paths:
+            app = YouTubeVideo(title, str(file), tags, str(cookie), thumbnail_path=thumbnail_path, playlist=playlist, visibility=visibility)
+            asyncio.run(app.main())
+
+
+def post_video_tiktok(title, files, tags, account_file, enableTimer=False, videos_per_day=1, daily_times=None, start_days=0):
+    video_paths, acc_paths = _resolve_paths(files, account_file)
+    publish_datetimes = generate_schedule_time_next_day(len(video_paths), videos_per_day, daily_times, start_days) if enableTimer else [0] * len(video_paths)
+    for index, file in enumerate(video_paths):
+        for cookie in acc_paths:
+            app = TiktokVideo(title, str(file), tags, publish_datetimes[index], str(cookie))
+            asyncio.run(app.main())

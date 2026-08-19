@@ -83,6 +83,13 @@
 | 虎扑 | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | 浏览器自动化，标题 4–40 字 |
 | TikTok | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | 当前示例走 Chrome 版实现 |
 | YouTube | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | 浏览器自动化（Studio），支持加入播放列表/可见性 |
+| Facebook | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | 浏览器自动化（Meta Business / Web），支持 Reels & Video |
+| Instagram | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | 浏览器自动化，支持 Reels & Video Post |
+| Twitter / X | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | 浏览器自动化，支持 Video Tweet & Post |
+| Threads | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | 浏览器自动化，支持 Thread Video & Post |
+| Pinterest | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | 浏览器自动化，支持 Video Pin & Idea Pin |
+| Zalo Video | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | 浏览器自动化，支持 Zalo OA Video |
+
 
 ### AI这么强，为什么还需要这个项目
 在你使用AI的能力，browser agent等等，每次都让 agent 重新解析网页、截图理解, 临场判断

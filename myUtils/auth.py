@@ -102,22 +102,56 @@ async def cookie_auth_xhs(account_file):
             return True
 
 
-async def check_cookie(type, file_path):
-    match type:
-        # 小红书
-        case 1:
-            return await cookie_auth_xhs(Path(BASE_DIR / "cookiesFile" / file_path))
-        # 视频号
-        case 2:
-            return await cookie_auth_tencent(Path(BASE_DIR / "cookiesFile" / file_path))
-        # 抖音
-        case 3:
-            return await cookie_auth_douyin(Path(BASE_DIR / "cookiesFile" / file_path))
-        # 快手
-        case 4:
-            return await cookie_auth_ks(Path(BASE_DIR / "cookiesFile" / file_path))
-        case _:
+from uploader.facebook_uploader.main import cookie_auth as cookie_auth_facebook
+from uploader.instagram_uploader.main import cookie_auth as cookie_auth_instagram
+from uploader.twitter_uploader.main import cookie_auth as cookie_auth_twitter
+from uploader.threads_uploader.main import cookie_auth as cookie_auth_threads
+from uploader.pinterest_uploader.main import cookie_auth as cookie_auth_pinterest
+from uploader.zalo_uploader.main import cookie_auth as cookie_auth_zalo
+from uploader.youtube_uploader.main import cookie_auth as cookie_auth_youtube
+from uploader.tk_uploader.main import cookie_auth as cookie_auth_tiktok
+
+
+async def check_cookie(type: int, file_path: str | Path) -> bool:
+    target_path = Path(BASE_DIR / "cookiesFile" / file_path)
+    if not target_path.exists():
+        # Fallback to cookies/ folder
+        fallback_path = Path(BASE_DIR / "cookies" / file_path)
+        if fallback_path.exists():
+            target_path = fallback_path
+        else:
             return False
 
-# a = asyncio.run(check_cookie(1,"3a6cfdc0-3d51-11f0-8507-44e51723d63c.json"))
-# print(a)
+    str_path = str(target_path)
+    try:
+        match int(type):
+            case 1:  # Xiaohongshu
+                return await cookie_auth_xhs(target_path)
+            case 2:  # WeChat Channels
+                return await cookie_auth_tencent(target_path)
+            case 3:  # Douyin
+                return await cookie_auth_douyin(target_path)
+            case 4:  # Kuaishou
+                return await cookie_auth_ks(target_path)
+            case 5:  # Facebook
+                return await cookie_auth_facebook(str_path)
+            case 6:  # Instagram
+                return await cookie_auth_instagram(str_path)
+            case 7:  # Twitter / X
+                return await cookie_auth_twitter(str_path)
+            case 8:  # Threads
+                return await cookie_auth_threads(str_path)
+            case 9:  # Pinterest
+                return await cookie_auth_pinterest(str_path)
+            case 10:  # Zalo
+                return await cookie_auth_zalo(str_path)
+            case 11:  # YouTube
+                return await cookie_auth_youtube(str_path)
+            case 12:  # TikTok
+                return await cookie_auth_tiktok(str_path)
+            case _:
+                return False
+    except Exception as e:
+        print(f"[check_cookie error for type {type}]: {e}")
+        return False
+

@@ -2,12 +2,11 @@ import sqlite3
 import json
 import os
 
-# 数据库文件路径（如果不存在会自动创建）
-db_file = './database.db'
+from pathlib import Path
 
-# 如果数据库已存在，则删除旧的表（可选）
-# if os.path.exists(db_file):
-#     os.remove(db_file)
+# 数据库文件路径（如果不存在会自动创建）
+BASE_DB_DIR = Path(__file__).parent.resolve()
+db_file = BASE_DB_DIR / 'database.db'
 
 # 连接到SQLite数据库（如果文件不存在则会自动创建）
 conn = sqlite3.connect(db_file)

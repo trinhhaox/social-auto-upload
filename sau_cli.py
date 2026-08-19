@@ -66,6 +66,36 @@ from uploader.youtube_uploader.main import (
     cookie_auth as youtube_cookie_auth,
     youtube_setup,
 )
+from uploader.facebook_uploader.main import (
+    FacebookVideo,
+    cookie_auth as facebook_cookie_auth,
+    facebook_setup,
+)
+from uploader.instagram_uploader.main import (
+    InstagramVideo,
+    cookie_auth as instagram_cookie_auth,
+    instagram_setup,
+)
+from uploader.twitter_uploader.main import (
+    TwitterVideo,
+    cookie_auth as twitter_cookie_auth,
+    twitter_setup,
+)
+from uploader.threads_uploader.main import (
+    ThreadsVideo,
+    cookie_auth as threads_cookie_auth,
+    threads_setup,
+)
+from uploader.pinterest_uploader.main import (
+    PinterestVideo,
+    cookie_auth as pinterest_cookie_auth,
+    pinterest_setup,
+)
+from uploader.zalo_uploader.main import (
+    ZaloVideo,
+    cookie_auth as zalo_cookie_auth,
+    zalo_setup,
+)
 
 SCHEDULE_FORMAT = "%Y-%m-%d %H:%M"
 
@@ -256,6 +286,83 @@ class YouTubeVideoUploadRequest:
     headless: bool = False
 
 
+@dataclass(slots=True)
+class FacebookVideoUploadRequest:
+    account_name: str
+    video_file: Path
+    title: str
+    description: str
+    tags: list[str]
+    publish_date: datetime | int = 0
+    is_reel: bool = True
+    debug: bool = True
+    headless: bool = True
+
+
+@dataclass(slots=True)
+class InstagramVideoUploadRequest:
+    account_name: str
+    video_file: Path
+    title: str
+    description: str
+    tags: list[str]
+    publish_date: datetime | int = 0
+    debug: bool = True
+    headless: bool = True
+
+
+@dataclass(slots=True)
+class TwitterVideoUploadRequest:
+    account_name: str
+    video_file: Path
+    title: str
+    description: str
+    tags: list[str]
+    publish_date: datetime | int = 0
+    debug: bool = True
+    headless: bool = True
+
+
+@dataclass(slots=True)
+class ThreadsVideoUploadRequest:
+    account_name: str
+    video_file: Path
+    title: str
+    description: str
+    tags: list[str]
+    publish_date: datetime | int = 0
+    debug: bool = True
+    headless: bool = True
+
+
+@dataclass(slots=True)
+class PinterestVideoUploadRequest:
+    account_name: str
+    video_file: Path
+    title: str
+    description: str
+    tags: list[str]
+    link: str = ""
+    board: str = ""
+    publish_date: datetime | int = 0
+    debug: bool = True
+    headless: bool = True
+
+
+@dataclass(slots=True)
+class ZaloVideoUploadRequest:
+    account_name: str
+    video_file: Path
+    title: str
+    description: str
+    tags: list[str]
+    category: str = ""
+    publish_date: datetime | int = 0
+    debug: bool = True
+    headless: bool = True
+
+
+
 def has_interactive_terminal() -> bool:
     return sys.stdin.isatty() and sys.stdout.isatty()
 
@@ -404,6 +511,257 @@ async def upload_youtube_video(request: YouTubeVideoUploadRequest) -> Path:
     )
     await app.main()
     return account_file
+
+
+# Facebook helpers
+async def login_facebook_account(account_name: str, headless: bool = False) -> dict:
+    account_file = resolve_account_file("facebook", account_name)
+    is_ready = await facebook_setup(str(account_file), handle=True)
+    return {
+        "success": is_ready,
+        "message": "Facebook login completed" if is_ready else "Facebook login failed",
+        "account_file": str(account_file),
+    }
+
+
+async def check_facebook_account(account_name: str) -> bool:
+    account_file = resolve_account_file("facebook", account_name)
+    if not account_file.exists():
+        return False
+    return await facebook_cookie_auth(str(account_file))
+
+
+async def upload_facebook_video(request: FacebookVideoUploadRequest) -> Path:
+    account_file = resolve_account_file("facebook", request.account_name)
+    is_ready = await facebook_setup(str(account_file), handle=False)
+    if not is_ready:
+        raise RuntimeError(
+            f"Facebook cookie is missing or expired: {account_file}. Run `sau facebook login --account {request.account_name}` first."
+        )
+
+    app = FacebookVideo(
+        title=request.title,
+        file_path=str(request.video_file),
+        tags=request.tags,
+        publish_date=request.publish_date,
+        account_file=str(account_file),
+        description=request.description,
+        is_reel=request.is_reel,
+    )
+    app.headless = request.headless
+    success = await app.upload()
+    if not success:
+        raise RuntimeError("Facebook video upload failed")
+    return account_file
+
+
+# Instagram helpers
+async def login_instagram_account(account_name: str, headless: bool = False) -> dict:
+    account_file = resolve_account_file("instagram", account_name)
+    is_ready = await instagram_setup(str(account_file), handle=True)
+    return {
+        "success": is_ready,
+        "message": "Instagram login completed" if is_ready else "Instagram login failed",
+        "account_file": str(account_file),
+    }
+
+
+async def check_instagram_account(account_name: str) -> bool:
+    account_file = resolve_account_file("instagram", account_name)
+    if not account_file.exists():
+        return False
+    return await instagram_cookie_auth(str(account_file))
+
+
+async def upload_instagram_video(request: InstagramVideoUploadRequest) -> Path:
+    account_file = resolve_account_file("instagram", request.account_name)
+    is_ready = await instagram_setup(str(account_file), handle=False)
+    if not is_ready:
+        raise RuntimeError(
+            f"Instagram cookie is missing or expired: {account_file}. Run `sau instagram login --account {request.account_name}` first."
+        )
+
+    app = InstagramVideo(
+        title=request.title,
+        file_path=str(request.video_file),
+        tags=request.tags,
+        publish_date=request.publish_date,
+        account_file=str(account_file),
+        description=request.description,
+    )
+    app.headless = request.headless
+    success = await app.upload()
+    if not success:
+        raise RuntimeError("Instagram video upload failed")
+    return account_file
+
+
+# Twitter / X helpers
+async def login_twitter_account(account_name: str, headless: bool = False) -> dict:
+    account_file = resolve_account_file("twitter", account_name)
+    is_ready = await twitter_setup(str(account_file), handle=True)
+    return {
+        "success": is_ready,
+        "message": "Twitter/X login completed" if is_ready else "Twitter/X login failed",
+        "account_file": str(account_file),
+    }
+
+
+async def check_twitter_account(account_name: str) -> bool:
+    account_file = resolve_account_file("twitter", account_name)
+    if not account_file.exists():
+        return False
+    return await twitter_cookie_auth(str(account_file))
+
+
+async def upload_twitter_video(request: TwitterVideoUploadRequest) -> Path:
+    account_file = resolve_account_file("twitter", request.account_name)
+    is_ready = await twitter_setup(str(account_file), handle=False)
+    if not is_ready:
+        raise RuntimeError(
+            f"Twitter/X cookie is missing or expired: {account_file}. Run `sau twitter login --account {request.account_name}` first."
+        )
+
+    app = TwitterVideo(
+        title=request.title,
+        file_path=str(request.video_file),
+        tags=request.tags,
+        publish_date=request.publish_date,
+        account_file=str(account_file),
+        description=request.description,
+    )
+    app.headless = request.headless
+    success = await app.upload()
+    if not success:
+        raise RuntimeError("Twitter/X video upload failed")
+    return account_file
+
+
+# Threads helpers
+async def login_threads_account(account_name: str, headless: bool = False) -> dict:
+    account_file = resolve_account_file("threads", account_name)
+    is_ready = await threads_setup(str(account_file), handle=True)
+    return {
+        "success": is_ready,
+        "message": "Threads login completed" if is_ready else "Threads login failed",
+        "account_file": str(account_file),
+    }
+
+
+async def check_threads_account(account_name: str) -> bool:
+    account_file = resolve_account_file("threads", account_name)
+    if not account_file.exists():
+        return False
+    return await threads_cookie_auth(str(account_file))
+
+
+async def upload_threads_video(request: ThreadsVideoUploadRequest) -> Path:
+    account_file = resolve_account_file("threads", request.account_name)
+    is_ready = await threads_setup(str(account_file), handle=False)
+    if not is_ready:
+        raise RuntimeError(
+            f"Threads cookie is missing or expired: {account_file}. Run `sau threads login --account {request.account_name}` first."
+        )
+
+    app = ThreadsVideo(
+        title=request.title,
+        file_path=str(request.video_file),
+        tags=request.tags,
+        publish_date=request.publish_date,
+        account_file=str(account_file),
+        description=request.description,
+    )
+    app.headless = request.headless
+    success = await app.upload()
+    if not success:
+        raise RuntimeError("Threads video upload failed")
+    return account_file
+
+
+# Pinterest helpers
+async def login_pinterest_account(account_name: str, headless: bool = False) -> dict:
+    account_file = resolve_account_file("pinterest", account_name)
+    is_ready = await pinterest_setup(str(account_file), handle=True)
+    return {
+        "success": is_ready,
+        "message": "Pinterest login completed" if is_ready else "Pinterest login failed",
+        "account_file": str(account_file),
+    }
+
+
+async def check_pinterest_account(account_name: str) -> bool:
+    account_file = resolve_account_file("pinterest", account_name)
+    if not account_file.exists():
+        return False
+    return await pinterest_cookie_auth(str(account_file))
+
+
+async def upload_pinterest_video(request: PinterestVideoUploadRequest) -> Path:
+    account_file = resolve_account_file("pinterest", request.account_name)
+    is_ready = await pinterest_setup(str(account_file), handle=False)
+    if not is_ready:
+        raise RuntimeError(
+            f"Pinterest cookie is missing or expired: {account_file}. Run `sau pinterest login --account {request.account_name}` first."
+        )
+
+    app = PinterestVideo(
+        title=request.title,
+        file_path=str(request.video_file),
+        tags=request.tags,
+        publish_date=request.publish_date,
+        account_file=str(account_file),
+        description=request.description,
+        link=request.link,
+        board=request.board,
+    )
+    app.headless = request.headless
+    success = await app.upload()
+    if not success:
+        raise RuntimeError("Pinterest video upload failed")
+    return account_file
+
+
+# Zalo helpers
+async def login_zalo_account(account_name: str, headless: bool = False) -> dict:
+    account_file = resolve_account_file("zalo", account_name)
+    is_ready = await zalo_setup(str(account_file), handle=True)
+    return {
+        "success": is_ready,
+        "message": "Zalo login completed" if is_ready else "Zalo login failed",
+        "account_file": str(account_file),
+    }
+
+
+async def check_zalo_account(account_name: str) -> bool:
+    account_file = resolve_account_file("zalo", account_name)
+    if not account_file.exists():
+        return False
+    return await zalo_cookie_auth(str(account_file))
+
+
+async def upload_zalo_video(request: ZaloVideoUploadRequest) -> Path:
+    account_file = resolve_account_file("zalo", request.account_name)
+    is_ready = await zalo_setup(str(account_file), handle=False)
+    if not is_ready:
+        raise RuntimeError(
+            f"Zalo cookie is missing or expired: {account_file}. Run `sau zalo login --account {request.account_name}` first."
+        )
+
+    app = ZaloVideo(
+        title=request.title,
+        file_path=str(request.video_file),
+        tags=request.tags,
+        publish_date=request.publish_date,
+        account_file=str(account_file),
+        description=request.description,
+        category=request.category,
+    )
+    app.headless = request.headless
+    success = await app.upload()
+    if not success:
+        raise RuntimeError("Zalo video upload failed")
+    return account_file
+
 
 
 async def upload_video(request: DouyinVideoUploadRequest) -> Path:
@@ -1033,6 +1391,114 @@ def build_parser() -> argparse.ArgumentParser:
     baijiahao_upload_video_parser.add_argument("--collection", default=None, help="Optional collection name")
     add_runtime_flags(baijiahao_upload_video_parser)
 
+    # Facebook parser
+    facebook_parser = platform_parsers.add_parser("facebook", help="Facebook operations")
+    facebook_actions = facebook_parser.add_subparsers(dest="action", required=True)
+    for action_name in ("login", "check"):
+        action_parser = facebook_actions.add_parser(action_name, help=f"Facebook {action_name}")
+        action_parser.add_argument("--account", required=True, help="Facebook user-defined account_name")
+        if action_name == "login":
+            add_runtime_flags(action_parser)
+
+    facebook_upload_video_parser = facebook_actions.add_parser("upload-video", help="Upload one video/reel to Facebook")
+    facebook_upload_video_parser.add_argument("--account", required=True, help="Facebook user-defined account_name")
+    facebook_upload_video_parser.add_argument("--file", required=True, type=existing_file_path, help="Video file path")
+    facebook_upload_video_parser.add_argument("--title", required=True, help="Video title")
+    facebook_upload_video_parser.add_argument("--desc", default="", help="Optional video description")
+    facebook_upload_video_parser.add_argument("--tags", default="", help="Comma-separated tags, such as tag1,tag2")
+    facebook_upload_video_parser.add_argument("--schedule", type=schedule_value, help=f"Schedule time in {schedule_help}")
+    facebook_upload_video_parser.add_argument("--reel", action="store_true", default=True, help="Upload as Reel (default true)")
+    add_runtime_flags(facebook_upload_video_parser)
+
+    # Instagram parser
+    instagram_parser = platform_parsers.add_parser("instagram", help="Instagram operations")
+    instagram_actions = instagram_parser.add_subparsers(dest="action", required=True)
+    for action_name in ("login", "check"):
+        action_parser = instagram_actions.add_parser(action_name, help=f"Instagram {action_name}")
+        action_parser.add_argument("--account", required=True, help="Instagram user-defined account_name")
+        if action_name == "login":
+            add_runtime_flags(action_parser)
+
+    instagram_upload_video_parser = instagram_actions.add_parser("upload-video", help="Upload one video/reel to Instagram")
+    instagram_upload_video_parser.add_argument("--account", required=True, help="Instagram user-defined account_name")
+    instagram_upload_video_parser.add_argument("--file", required=True, type=existing_file_path, help="Video file path")
+    instagram_upload_video_parser.add_argument("--title", required=True, help="Video title")
+    instagram_upload_video_parser.add_argument("--desc", default="", help="Optional video description")
+    instagram_upload_video_parser.add_argument("--tags", default="", help="Comma-separated tags, such as tag1,tag2")
+    instagram_upload_video_parser.add_argument("--schedule", type=schedule_value, help=f"Schedule time in {schedule_help}")
+    add_runtime_flags(instagram_upload_video_parser)
+
+    # Twitter / X parser
+    twitter_parser = platform_parsers.add_parser("twitter", help="Twitter / X operations")
+    twitter_actions = twitter_parser.add_subparsers(dest="action", required=True)
+    for action_name in ("login", "check"):
+        action_parser = twitter_actions.add_parser(action_name, help=f"Twitter {action_name}")
+        action_parser.add_argument("--account", required=True, help="Twitter user-defined account_name")
+        if action_name == "login":
+            add_runtime_flags(action_parser)
+
+    twitter_upload_video_parser = twitter_actions.add_parser("upload-video", help="Upload one tweet with video to Twitter / X")
+    twitter_upload_video_parser.add_argument("--account", required=True, help="Twitter user-defined account_name")
+    twitter_upload_video_parser.add_argument("--file", required=True, type=existing_file_path, help="Video file path")
+    twitter_upload_video_parser.add_argument("--title", required=True, help="Tweet text / Video title")
+    twitter_upload_video_parser.add_argument("--desc", default="", help="Optional tweet description")
+    twitter_upload_video_parser.add_argument("--tags", default="", help="Comma-separated tags, such as tag1,tag2")
+    add_runtime_flags(twitter_upload_video_parser)
+
+    # Threads parser
+    threads_parser = platform_parsers.add_parser("threads", help="Threads operations")
+    threads_actions = threads_parser.add_subparsers(dest="action", required=True)
+    for action_name in ("login", "check"):
+        action_parser = threads_actions.add_parser(action_name, help=f"Threads {action_name}")
+        action_parser.add_argument("--account", required=True, help="Threads user-defined account_name")
+        if action_name == "login":
+            add_runtime_flags(action_parser)
+
+    threads_upload_video_parser = threads_actions.add_parser("upload-video", help="Upload one post with video to Threads")
+    threads_upload_video_parser.add_argument("--account", required=True, help="Threads user-defined account_name")
+    threads_upload_video_parser.add_argument("--file", required=True, type=existing_file_path, help="Video file path")
+    threads_upload_video_parser.add_argument("--title", required=True, help="Thread text / Video title")
+    threads_upload_video_parser.add_argument("--desc", default="", help="Optional description")
+    threads_upload_video_parser.add_argument("--tags", default="", help="Comma-separated tags, such as tag1,tag2")
+    add_runtime_flags(threads_upload_video_parser)
+
+    # Pinterest parser
+    pinterest_parser = platform_parsers.add_parser("pinterest", help="Pinterest operations")
+    pinterest_actions = pinterest_parser.add_subparsers(dest="action", required=True)
+    for action_name in ("login", "check"):
+        action_parser = pinterest_actions.add_parser(action_name, help=f"Pinterest {action_name}")
+        action_parser.add_argument("--account", required=True, help="Pinterest user-defined account_name")
+        if action_name == "login":
+            add_runtime_flags(action_parser)
+
+    pinterest_upload_video_parser = pinterest_actions.add_parser("upload-video", help="Upload one Video Pin to Pinterest")
+    pinterest_upload_video_parser.add_argument("--account", required=True, help="Pinterest user-defined account_name")
+    pinterest_upload_video_parser.add_argument("--file", required=True, type=existing_file_path, help="Video file path")
+    pinterest_upload_video_parser.add_argument("--title", required=True, help="Pin title")
+    pinterest_upload_video_parser.add_argument("--desc", default="", help="Optional Pin description")
+    pinterest_upload_video_parser.add_argument("--tags", default="", help="Comma-separated tags, such as tag1,tag2")
+    pinterest_upload_video_parser.add_argument("--link", default="", help="Optional destination URL")
+    pinterest_upload_video_parser.add_argument("--board", default="", help="Optional board name")
+    add_runtime_flags(pinterest_upload_video_parser)
+
+    # Zalo parser
+    zalo_parser = platform_parsers.add_parser("zalo", help="Zalo operations")
+    zalo_actions = zalo_parser.add_subparsers(dest="action", required=True)
+    for action_name in ("login", "check"):
+        action_parser = zalo_actions.add_parser(action_name, help=f"Zalo {action_name}")
+        action_parser.add_argument("--account", required=True, help="Zalo user-defined account_name")
+        if action_name == "login":
+            add_runtime_flags(action_parser)
+
+    zalo_upload_video_parser = zalo_actions.add_parser("upload-video", help="Upload one video to Zalo OA")
+    zalo_upload_video_parser.add_argument("--account", required=True, help="Zalo user-defined account_name")
+    zalo_upload_video_parser.add_argument("--file", required=True, type=existing_file_path, help="Video file path")
+    zalo_upload_video_parser.add_argument("--title", required=True, help="Video title")
+    zalo_upload_video_parser.add_argument("--desc", default="", help="Optional video description")
+    zalo_upload_video_parser.add_argument("--tags", default="", help="Comma-separated tags, such as tag1,tag2")
+    zalo_upload_video_parser.add_argument("--category", default="", help="Optional video category")
+    add_runtime_flags(zalo_upload_video_parser)
+
     return parser
 
 
@@ -1438,6 +1904,186 @@ async def dispatch(args: argparse.Namespace) -> int:
             return 0
 
         raise RuntimeError(f"Unsupported Baijiahao action: {args.action}")
+
+    if args.platform == "facebook":
+        if args.action == "login":
+            result = await login_facebook_account(args.account, headless=args.headless)
+            if not result["success"]:
+                raise RuntimeError(result["message"])
+            print(f"Facebook login flow completed: {result['account_file']}")
+            return 0
+
+        if args.action == "check":
+            is_valid = await check_facebook_account(args.account)
+            print("valid" if is_valid else "invalid")
+            return 0 if is_valid else 1
+
+        if args.action == "upload-video":
+            request = FacebookVideoUploadRequest(
+                account_name=args.account,
+                video_file=args.file,
+                title=args.title,
+                description=args.desc,
+                tags=parse_tags(args.tags),
+                publish_date=args.schedule or 0,
+                is_reel=args.reel,
+                debug=args.debug,
+                headless=args.headless,
+            )
+            await upload_facebook_video(request)
+            print(f"Facebook video upload submitted: {request.video_file}")
+            return 0
+
+        raise RuntimeError(f"Unsupported Facebook action: {args.action}")
+
+    if args.platform == "instagram":
+        if args.action == "login":
+            result = await login_instagram_account(args.account, headless=args.headless)
+            if not result["success"]:
+                raise RuntimeError(result["message"])
+            print(f"Instagram login flow completed: {result['account_file']}")
+            return 0
+
+        if args.action == "check":
+            is_valid = await check_instagram_account(args.account)
+            print("valid" if is_valid else "invalid")
+            return 0 if is_valid else 1
+
+        if args.action == "upload-video":
+            request = InstagramVideoUploadRequest(
+                account_name=args.account,
+                video_file=args.file,
+                title=args.title,
+                description=args.desc,
+                tags=parse_tags(args.tags),
+                publish_date=args.schedule or 0,
+                debug=args.debug,
+                headless=args.headless,
+            )
+            await upload_instagram_video(request)
+            print(f"Instagram video upload submitted: {request.video_file}")
+            return 0
+
+        raise RuntimeError(f"Unsupported Instagram action: {args.action}")
+
+    if args.platform == "twitter":
+        if args.action == "login":
+            result = await login_twitter_account(args.account, headless=args.headless)
+            if not result["success"]:
+                raise RuntimeError(result["message"])
+            print(f"Twitter login flow completed: {result['account_file']}")
+            return 0
+
+        if args.action == "check":
+            is_valid = await check_twitter_account(args.account)
+            print("valid" if is_valid else "invalid")
+            return 0 if is_valid else 1
+
+        if args.action == "upload-video":
+            request = TwitterVideoUploadRequest(
+                account_name=args.account,
+                video_file=args.file,
+                title=args.title,
+                description=args.desc,
+                tags=parse_tags(args.tags),
+                debug=args.debug,
+                headless=args.headless,
+            )
+            await upload_twitter_video(request)
+            print(f"Twitter video upload submitted: {request.video_file}")
+            return 0
+
+        raise RuntimeError(f"Unsupported Twitter action: {args.action}")
+
+    if args.platform == "threads":
+        if args.action == "login":
+            result = await login_threads_account(args.account, headless=args.headless)
+            if not result["success"]:
+                raise RuntimeError(result["message"])
+            print(f"Threads login flow completed: {result['account_file']}")
+            return 0
+
+        if args.action == "check":
+            is_valid = await check_threads_account(args.account)
+            print("valid" if is_valid else "invalid")
+            return 0 if is_valid else 1
+
+        if args.action == "upload-video":
+            request = ThreadsVideoUploadRequest(
+                account_name=args.account,
+                video_file=args.file,
+                title=args.title,
+                description=args.desc,
+                tags=parse_tags(args.tags),
+                debug=args.debug,
+                headless=args.headless,
+            )
+            await upload_threads_video(request)
+            print(f"Threads video upload submitted: {request.video_file}")
+            return 0
+
+        raise RuntimeError(f"Unsupported Threads action: {args.action}")
+
+    if args.platform == "pinterest":
+        if args.action == "login":
+            result = await login_pinterest_account(args.account, headless=args.headless)
+            if not result["success"]:
+                raise RuntimeError(result["message"])
+            print(f"Pinterest login flow completed: {result['account_file']}")
+            return 0
+
+        if args.action == "check":
+            is_valid = await check_pinterest_account(args.account)
+            print("valid" if is_valid else "invalid")
+            return 0 if is_valid else 1
+
+        if args.action == "upload-video":
+            request = PinterestVideoUploadRequest(
+                account_name=args.account,
+                video_file=args.file,
+                title=args.title,
+                description=args.desc,
+                tags=parse_tags(args.tags),
+                link=args.link,
+                board=args.board,
+                debug=args.debug,
+                headless=args.headless,
+            )
+            await upload_pinterest_video(request)
+            print(f"Pinterest video upload submitted: {request.video_file}")
+            return 0
+
+        raise RuntimeError(f"Unsupported Pinterest action: {args.action}")
+
+    if args.platform == "zalo":
+        if args.action == "login":
+            result = await login_zalo_account(args.account, headless=args.headless)
+            if not result["success"]:
+                raise RuntimeError(result["message"])
+            print(f"Zalo login flow completed: {result['account_file']}")
+            return 0
+
+        if args.action == "check":
+            is_valid = await check_zalo_account(args.account)
+            print("valid" if is_valid else "invalid")
+            return 0 if is_valid else 1
+
+        if args.action == "upload-video":
+            request = ZaloVideoUploadRequest(
+                account_name=args.account,
+                video_file=args.file,
+                title=args.title,
+                description=args.desc,
+                tags=parse_tags(args.tags),
+                category=args.category,
+                debug=args.debug,
+                headless=args.headless,
+            )
+            await upload_zalo_video(request)
+            print(f"Zalo video upload submitted: {request.video_file}")
+            return 0
+
+        raise RuntimeError(f"Unsupported Zalo action: {args.action}")
 
     raise RuntimeError(f"Unsupported platform: {args.platform}")
 

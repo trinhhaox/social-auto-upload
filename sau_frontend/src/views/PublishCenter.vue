@@ -531,6 +531,14 @@ const batchPublishType = ref('info')
 
 // 平台列表 - 对应后端type字段
 const platforms = [
+  { key: 5, name: 'Facebook (Reels & Fanpage)' },
+  { key: 6, name: 'Instagram (Reels & Post)' },
+  { key: 7, name: 'Twitter / X' },
+  { key: 8, name: 'Threads (Meta)' },
+  { key: 9, name: 'Pinterest (Video Pin)' },
+  { key: 10, name: 'Zalo Video / OA' },
+  { key: 11, name: 'YouTube Studio' },
+  { key: 12, name: 'TikTok Quốc tế' },
   { key: 3, name: 'Douyin (抖音)' },
   { key: 4, name: 'Kuaishou (快手)' },
   { key: 2, name: 'WeChat Channels (视频号)' },
@@ -543,8 +551,12 @@ const defaultTabInit = {
   fileList: [], // 后端返回的文件名列表
   displayFileList: [], // 用于显示的文件列表
   selectedAccounts: [], // 选中的账号ID列表
-  selectedPlatform: 3, // 选中的平台（单选，mặc định Douyin）
+  selectedPlatform: 5, // 选中的平台（单选，mặc định Facebook）
   title: '',
+  link: '', // Pinterest link / destination link
+  board: '', // Pinterest board
+  isReel: true, // Facebook / Instagram Reel toggle
+  category: '', // Zalo / WeChat category
   productLink: '', // 商品链接
   productTitle: '', // 商品名称
   selectedTopics: [], // 话题列表（不带#号）
@@ -584,13 +596,34 @@ const accountStore = useAccountStore()
 // 根据选择的平台获取可用账号列表
 const availableAccounts = computed(() => {
   const platformMap = {
-    3: '抖音',
-    2: '视频号',
     1: '小红书',
-    4: '快手'
+    2: '视频号',
+    3: '抖音',
+    4: '快手',
+    5: 'Facebook',
+    6: 'Instagram',
+    7: 'Twitter',
+    8: 'Threads',
+    9: 'Pinterest',
+    10: 'Zalo',
+    11: 'YouTube',
+    12: 'TikTok'
   }
-  const currentPlatform = currentTab.value ? platformMap[currentTab.value.selectedPlatform] : null
-  return currentPlatform ? accountStore.accounts.filter(acc => acc.platform === currentPlatform || acc.platform === platforms.find(p => p.key === currentTab.value.selectedPlatform)?.name) : []
+  const currentPlatformKey = currentTab.value ? currentTab.value.selectedPlatform : null
+  const currentPlatformName = currentPlatformKey ? platformMap[currentPlatformKey] : null
+  if (!currentPlatformName) return []
+  return accountStore.accounts.filter(acc => 
+    acc.platform === currentPlatformName || 
+    acc.platform === platforms.find(p => p.key === currentPlatformKey)?.name ||
+    (currentPlatformName === 'Facebook' && acc.platform?.toLowerCase().includes('facebook')) ||
+    (currentPlatformName === 'Instagram' && acc.platform?.toLowerCase().includes('instagram')) ||
+    (currentPlatformName === 'Twitter' && acc.platform?.toLowerCase().includes('twitter')) ||
+    (currentPlatformName === 'Threads' && acc.platform?.toLowerCase().includes('threads')) ||
+    (currentPlatformName === 'Pinterest' && acc.platform?.toLowerCase().includes('pinterest')) ||
+    (currentPlatformName === 'Zalo' && acc.platform?.toLowerCase().includes('zalo')) ||
+    (currentPlatformName === 'YouTube' && acc.platform?.toLowerCase().includes('youtube')) ||
+    (currentPlatformName === 'TikTok' && acc.platform?.toLowerCase().includes('tiktok'))
+  )
 })
 
 // 话题相关状态
@@ -806,7 +839,10 @@ const confirmPublish = async (tab) => {
     category: tab.isOriginal ? 1 : 0, // 1表示原创，0表示非原创
     productLink: tab.productLink.trim() || '',
     productTitle: tab.productTitle.trim() || '',
-    isDraft: tab.isDraft
+    isDraft: tab.isDraft,
+    link: tab.link ? tab.link.trim() : '',
+    board: tab.board ? tab.board.trim() : '',
+    isReel: tab.isReel
   }
 
   // 调用后端发布API（使用统一的http封装）

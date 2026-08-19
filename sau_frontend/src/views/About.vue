@@ -19,13 +19,19 @@
       <div class="about-section">
         <h3>Các nền tảng hỗ trợ</h3>
         <div class="platform-tags">
-          <el-tag type="danger">Douyin (TikTok Trung Quốc)</el-tag>
-          <el-tag type="success">Kuaishou</el-tag>
-          <el-tag type="warning">WeChat Channels (Kênh Video)</el-tag>
-          <el-tag type="info">Xiaohongshu (Tiểu Hồng Thư)</el-tag>
+          <el-tag type="primary">Facebook (Reels & Fanpage)</el-tag>
+          <el-tag type="danger">Instagram (Reels & Post)</el-tag>
+          <el-tag type="info">Twitter / X</el-tag>
+          <el-tag type="success">Threads (Meta)</el-tag>
+          <el-tag type="danger">Pinterest (Video Pin)</el-tag>
+          <el-tag type="primary">Zalo Video / OA</el-tag>
           <el-tag type="primary">YouTube Studio</el-tag>
-          <el-tag type="danger">Bilibili</el-tag>
           <el-tag type="success">TikTok Quốc tế</el-tag>
+          <el-tag type="danger">Douyin</el-tag>
+          <el-tag type="success">Kuaishou</el-tag>
+          <el-tag type="warning">WeChat Channels</el-tag>
+          <el-tag type="info">Xiaohongshu</el-tag>
+          <el-tag type="danger">Bilibili</el-tag>
         </div>
       </div>
 

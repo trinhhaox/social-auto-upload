@@ -41,17 +41,35 @@
             </div>
             <div class="stat-footer">
               <div class="stat-detail">
-                <el-tooltip content="Tài khoản Kuaishou" placement="top">
-                  <el-tag size="small" type="success">Kuaishou: {{ platformStats.kuaishou }}</el-tag>
+                <el-tooltip content="Facebook" placement="top" v-if="platformStats.fb > 0">
+                  <el-tag size="small" type="primary">FB: {{ platformStats.fb }}</el-tag>
                 </el-tooltip>
-                <el-tooltip content="Tài khoản Douyin" placement="top">
+                <el-tooltip content="Instagram" placement="top" v-if="platformStats.insta > 0">
+                  <el-tag size="small" type="danger">Insta: {{ platformStats.insta }}</el-tag>
+                </el-tooltip>
+                <el-tooltip content="Twitter / X" placement="top" v-if="platformStats.twitter > 0">
+                  <el-tag size="small" type="info">X: {{ platformStats.twitter }}</el-tag>
+                </el-tooltip>
+                <el-tooltip content="Threads" placement="top" v-if="platformStats.threads > 0">
+                  <el-tag size="small" type="success">Threads: {{ platformStats.threads }}</el-tag>
+                </el-tooltip>
+                <el-tooltip content="Pinterest" placement="top" v-if="platformStats.pin > 0">
+                  <el-tag size="small" type="danger">Pin: {{ platformStats.pin }}</el-tag>
+                </el-tooltip>
+                <el-tooltip content="Zalo" placement="top" v-if="platformStats.zalo > 0">
+                  <el-tag size="small" type="primary">Zalo: {{ platformStats.zalo }}</el-tag>
+                </el-tooltip>
+                <el-tooltip content="YouTube" placement="top" v-if="platformStats.yt > 0">
+                  <el-tag size="small" type="danger">YT: {{ platformStats.yt }}</el-tag>
+                </el-tooltip>
+                <el-tooltip content="TikTok" placement="top" v-if="platformStats.tk > 0">
+                  <el-tag size="small" type="success">TikTok: {{ platformStats.tk }}</el-tag>
+                </el-tooltip>
+                <el-tooltip content="Kuaishou" placement="top" v-if="platformStats.kuaishou > 0">
+                  <el-tag size="small" type="success">KS: {{ platformStats.kuaishou }}</el-tag>
+                </el-tooltip>
+                <el-tooltip content="Douyin" placement="top" v-if="platformStats.douyin > 0">
                   <el-tag size="small" type="danger">Douyin: {{ platformStats.douyin }}</el-tag>
-                </el-tooltip>
-                <el-tooltip content="Tài khoản WeChat Video" placement="top">
-                  <el-tag size="small" type="warning">WeChat: {{ platformStats.channels }}</el-tag>
-                </el-tooltip>
-                <el-tooltip content="Tài khoản Xiaohongshu" placement="top">
-                  <el-tag size="small" type="info">Xiaohongshu: {{ platformStats.xiaohongshu }}</el-tag>
                 </el-tooltip>
               </div>
             </div>
@@ -124,6 +142,31 @@
         </el-row>
       </div>
 
+      <!-- Lịch sử đăng bài gần đây -->
+      <div class="recent-tasks" v-if="publishHistory.length > 0" style="margin-bottom: 20px;">
+        <div class="section-header">
+          <h2>Lịch sử đăng bài gần đây</h2>
+          <el-button text @click="navigateTo('/publish-center')">Tạo bài mới</el-button>
+        </div>
+
+        <el-table :data="publishHistory.slice(0, 5)" style="width: 100%">
+          <el-table-column prop="title" label="Tiêu đề bài đăng" width="280" />
+          <el-table-column prop="platform_name" label="Nền tảng" width="160">
+            <template #default="scope">
+              <el-tag effect="plain" type="primary">{{ scope.row.platform_name }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="file_count" label="Số tệp" width="90" />
+          <el-table-column prop="account_count" label="Số tài khoản" width="110" />
+          <el-table-column prop="created_at" label="Thời gian gửi" width="180" />
+          <el-table-column prop="status" label="Trạng thái" width="120">
+            <template #default="scope">
+              <el-tag type="success" size="small">{{ scope.row.status }}</el-tag>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+
       <!-- Danh sách tư liệu gần đây -->
       <div class="recent-tasks">
         <div class="section-header">
@@ -190,13 +233,22 @@ const accountStats = computed(() => {
 // 平台统计数据 - 从真实数据计算
 const platformStats = computed(() => {
   const accounts = accountStore.accounts
+  const fb = accounts.filter(a => a.platform?.toLowerCase().includes('facebook')).length
+  const insta = accounts.filter(a => a.platform?.toLowerCase().includes('instagram')).length
+  const twitter = accounts.filter(a => a.platform?.toLowerCase().includes('twitter')).length
+  const threads = accounts.filter(a => a.platform?.toLowerCase().includes('threads')).length
+  const pin = accounts.filter(a => a.platform?.toLowerCase().includes('pinterest')).length
+  const zalo = accounts.filter(a => a.platform?.toLowerCase().includes('zalo')).length
+  const yt = accounts.filter(a => a.platform?.toLowerCase().includes('youtube')).length
+  const tk = accounts.filter(a => a.platform?.toLowerCase().includes('tiktok')).length
   const kuaishou = accounts.filter(a => a.platform === '快手' || a.platform === 'Kuaishou').length
   const douyin = accounts.filter(a => a.platform === '抖音' || a.platform === 'Douyin').length
   const channels = accounts.filter(a => a.platform === '视频号' || a.platform === 'WeChat Channels').length
   const xiaohongshu = accounts.filter(a => a.platform === '小红书' || a.platform === 'Xiaohongshu').length
-  // 统计有账号的平台数量
-  const total = [kuaishou, douyin, channels, xiaohongshu].filter(n => n > 0).length
-  return { total, kuaishou, douyin, channels, xiaohongshu }
+  
+  const allCounts = [fb, insta, twitter, threads, pin, zalo, yt, tk, kuaishou, douyin, channels, xiaohongshu]
+  const total = allCounts.filter(n => n > 0).length
+  return { total, fb, insta, twitter, threads, pin, zalo, yt, tk, kuaishou, douyin, channels, xiaohongshu }
 })
 
 // 素材统计数据 - 从真实数据计算
@@ -222,6 +274,9 @@ const recentMaterials = computed(() => {
     .slice(0, 5)
 })
 
+// Lịch sử đăng bài gần đây
+const publishHistory = ref([])
+
 // 获取文件类型
 const getFileType = (filename) => {
   if (videoExtensions.some(ext => filename.toLowerCase().endsWith(ext))) return 'Video'
@@ -244,10 +299,11 @@ const navigateTo = (path) => {
 const fetchDashboardData = async () => {
   loading.value = true
   try {
-    // 并行获取账号和素材数据
-    const [accountRes, materialRes] = await Promise.allSettled([
+    // 并行获取账号、素材数据和发布历史
+    const [accountRes, materialRes, historyRes] = await Promise.allSettled([
       accountApi.getAccounts(),
-      materialApi.getAllMaterials()
+      materialApi.getAllMaterials(),
+      fetch('/getPublishHistory').then(r => r.json())
     ])
 
     if (accountRes.status === 'fulfilled' && accountRes.value.code === 200) {
@@ -256,8 +312,11 @@ const fetchDashboardData = async () => {
     if (materialRes.status === 'fulfilled' && materialRes.value.code === 200) {
       appStore.setMaterials(materialRes.value.data)
     }
+    if (historyRes.status === 'fulfilled' && historyRes.value.code === 200) {
+      publishHistory.value = historyRes.value.data || []
+    }
   } catch (error) {
-    console.error('获取仪表盘数据失败:', error)
+    console.error('Lỗi khi tải dữ liệu trang tổng quan:', error)
   } finally {
     loading.value = false
   }

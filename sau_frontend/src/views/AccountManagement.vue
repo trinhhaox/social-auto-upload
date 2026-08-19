@@ -375,8 +375,16 @@
             style="width: 100%"
             :disabled="dialogType === 'edit' || sseConnecting"
           >
-            <el-option label="Kuaishou (快手)" value="快手" />
+            <el-option label="Facebook (Reels & Fanpage)" value="Facebook" />
+            <el-option label="Instagram (Reels & Post)" value="Instagram" />
+            <el-option label="Twitter / X" value="Twitter" />
+            <el-option label="Threads (Meta)" value="Threads" />
+            <el-option label="Pinterest" value="Pinterest" />
+            <el-option label="Zalo Video / OA" value="Zalo" />
+            <el-option label="YouTube Studio" value="YouTube" />
+            <el-option label="TikTok Quốc tế" value="TikTok" />
             <el-option label="Douyin (抖音)" value="抖音" />
+            <el-option label="Kuaishou (快手)" value="快手" />
             <el-option label="WeChat Channels (视频号)" value="视频号" />
             <el-option label="Xiaohongshu (小红书)" value="小红书" />
           </el-select>
@@ -474,17 +482,17 @@ const fetchAccounts = async () => {
     const res = await accountApi.getValidAccounts()
     if (res.code === 200 && res.data) {
       accountStore.setAccounts(res.data)
-      ElMessage.success('账号数据获取成功')
+      ElMessage.success('Lấy dữ liệu tài khoản thành công')
       // 标记为已访问
       if (appStore.isFirstTimeAccountManagement) {
         appStore.setAccountManagementVisited()
       }
     } else {
-      ElMessage.error('获取账号数据失败')
+      ElMessage.error('Lấy dữ liệu tài khoản thất bại')
     }
   } catch (error) {
-    console.error('获取账号数据失败:', error)
-    ElMessage.error('获取账号数据失败')
+    console.error('Lấy dữ liệu tài khoản thất bại:', error)
+    ElMessage.error('Lấy dữ liệu tài khoản thất bại')
   } finally {
     appStore.setAccountRefreshing(false)
   }
@@ -519,6 +527,14 @@ onMounted(() => {
 // 获取平台显示名称
 const getPlatformDisplayName = (platform) => {
   const map = {
+    'Facebook': 'Facebook (Meta)',
+    'Instagram': 'Instagram (Reels)',
+    'Twitter': 'Twitter / X',
+    'Threads': 'Threads (Meta)',
+    'Pinterest': 'Pinterest',
+    'Zalo': 'Zalo Video / OA',
+    'YouTube': 'YouTube Studio',
+    'TikTok': 'TikTok Quốc tế',
     '快手': 'Kuaishou',
     '抖音': 'Douyin',
     '视频号': 'WeChat Channels',
@@ -540,6 +556,14 @@ const getStatusDisplayName = (status) => {
 // 获取平台标签类型
 const getPlatformTagType = (platform) => {
   const typeMap = {
+    'Facebook': 'primary',
+    'Instagram': 'danger',
+    'Twitter': 'info',
+    'Threads': 'success',
+    'Pinterest': 'danger',
+    'Zalo': 'primary',
+    'YouTube': 'danger',
+    'TikTok': 'success',
     '快手': 'success',
     '抖音': 'danger',
     '视频号': 'warning',
@@ -850,12 +874,12 @@ const connectSSE = (platform, name) => {
             sseConnecting.value = false
 
             // 根据是否是重新登录显示不同提示
-            ElMessage.success(dialogType.value === 'edit' ? '重新登录成功' : '账号添加成功')
+            ElMessage.success(dialogType.value === 'edit' ? 'Đăng nhập lại thành công' : 'Thêm tài khoản thành công')
 
             // 显示更新账号信息提示
             ElMessage({
               type: 'info',
-              message: '正在同步账号信息...',
+              message: 'Đang đồng bộ thông tin tài khoản...',
               duration: 0
             })
 
@@ -863,7 +887,7 @@ const connectSSE = (platform, name) => {
             fetchAccounts().then(() => {
               // 刷新完成后关闭提示
               ElMessage.closeAll()
-              ElMessage.success('账号信息已更新')
+              ElMessage.success('Đã cập nhật thông tin tài khoản')
             })
           }, 1000)
         }, 1000)
@@ -883,8 +907,8 @@ const connectSSE = (platform, name) => {
 
   // 监听错误
   eventSource.onerror = (error) => {
-    console.error('SSE连接错误:', error)
-    ElMessage.error('连接服务器失败，请稍后再试')
+    console.error('SSE connection error:', error)
+    ElMessage.error('Kết nối máy chủ thất bại, vui lòng thử lại sau')
     closeSSEConnection()
     sseConnecting.value = false
   }
@@ -905,7 +929,15 @@ const submitAccountForm = () => {
             '小红书': 1,
             '视频号': 2,
             '抖音': 3,
-            '快手': 4
+            '快手': 4,
+            'Facebook': 5,
+            'Instagram': 6,
+            'Twitter': 7,
+            'Threads': 8,
+            'Pinterest': 9,
+            'Zalo': 10,
+            'YouTube': 11,
+            'TikTok': 12
           };
           const type = platformTypeMap[accountForm.platform] || 1;
 
@@ -923,16 +955,16 @@ const submitAccountForm = () => {
               status: accountForm.status // Keep the existing status
             };
             accountStore.updateAccount(accountForm.id, updatedAccount)
-            ElMessage.success('更新成功')
+            ElMessage.success('Cập nhật thành công')
             dialogVisible.value = false
             // 刷新账号列表
             fetchAccounts()
           } else {
-            ElMessage.error(res.msg || '更新账号失败')
+            ElMessage.error(res.msg || 'Cập nhật tài khoản thất bại')
           }
         } catch (error) {
-          console.error('更新账号失败:', error)
-          ElMessage.error('更新账号失败')
+          console.error('Cập nhật tài khoản thất bại:', error)
+          ElMessage.error('Cập nhật tài khoản thất bại')
         }
       }
     } else {

@@ -12,13 +12,68 @@ from flask import Flask, request, jsonify, Response, render_template, send_from_
 from werkzeug.utils import secure_filename
 from conf import BASE_DIR
 from myUtils.login import get_tencent_cookie, douyin_cookie_gen, get_ks_cookie, xiaohongshu_cookie_gen
-from myUtils.postVideo import post_video_tencent, post_video_DouYin, post_video_ks, post_video_xhs
+from myUtils.postVideo import (
+    post_video_tencent,
+    post_video_DouYin,
+    post_video_ks,
+    post_video_xhs,
+    post_video_facebook,
+    post_video_instagram,
+    post_video_twitter,
+    post_video_threads,
+    post_video_pinterest,
+    post_video_zalo,
+    post_video_youtube,
+    post_video_tiktok,
+)
 
 active_queues = {}
 app = Flask(__name__)
 
-#允许所有来源跨域访问
+# Cho phép tất cả các nguồn truy cập CORS
 CORS(app)
+
+def init_db():
+    try:
+        db_path = Path(BASE_DIR / "db" / "database.db")
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user_info (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                type INTEGER NOT NULL,
+                filePath TEXT NOT NULL,
+                userName TEXT NOT NULL,
+                status INTEGER DEFAULT 0
+            )''')
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS file_records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                filename TEXT NOT NULL,
+                filesize REAL,
+                upload_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+                file_path TEXT
+            )''')
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS publish_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT,
+                platform_type INTEGER,
+                platform_name TEXT,
+                account_count INTEGER,
+                file_count INTEGER,
+                status TEXT DEFAULT 'Success',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )''')
+            conn.commit()
+            print("✅ Cơ sở dữ liệu SQLite đã sẵn sàng")
+    except Exception as e:
+        print(f"[init_db error]: {e}")
+
+init_db()
+
+
 
 # 限制上传文件大小为160MB
 app.config['MAX_CONTENT_LENGTH'] = 160 * 1024 * 1024
@@ -432,51 +487,114 @@ def postVideo():
     daily_times = data.get('dailyTimes')
     start_days = data.get('startDays')
 
-    # 参数校验
-    if not file_list:
-        return jsonify({"code": 400, "msg": "文件列表不能为空", "data": None}), 400
-    if not account_list:
-        return jsonify({"code": 400, "msg": "账号列表不能为空", "data": None}), 400
-    if not type:
-        return jsonify({"code": 400, "msg": "平台类型不能为空", "data": None}), 400
-    if not title:
-        return jsonify({"code": 400, "msg": "标题不能为空", "data": None}), 400
+    link = data.get('link', '')
+    board = data.get('board', '')
+    is_reel = data.get('isReel', True)
+    playlist = data.get('playlist', '')
+    visibility = data.get('visibility', 'public')
 
-    # 打印获取到的数据（仅作为示例）
-    print("File List:", file_list)
-    print("Account List:", account_list)
+    # Parameters validation
+    if not file_list:
+        return jsonify({"code": 400, "msg": "Danh sách tệp không được để trống", "data": None}), 400
+    if not account_list:
+        return jsonify({"code": 400, "msg": "Danh sách tài khoản không được để trống", "data": None}), 400
+    if not type:
+        return jsonify({"code": 400, "msg": "Loại nền tảng không được để trống", "data": None}), 400
+    if not title:
+        return jsonify({"code": 400, "msg": "Tiêu đề không được để trống", "data": None}), 400
+
+    platform_names = {
+        1: "Xiaohongshu",
+        2: "WeChat Channels",
+        3: "Douyin",
+        4: "Kuaishou",
+        5: "Facebook",
+        6: "Instagram",
+        7: "Twitter / X",
+        8: "Threads",
+        9: "Pinterest",
+        10: "Zalo",
+        11: "YouTube",
+        12: "TikTok",
+    }
 
     try:
-        match type:
+        platform_type = int(type)
+        match platform_type:
             case 1:
-                post_video_xhs(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times,
-                                   start_days)
+                post_video_xhs(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times, start_days)
             case 2:
-                post_video_tencent(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times,
-                                   start_days, is_draft)
+                post_video_tencent(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times, start_days, is_draft)
             case 3:
-                post_video_DouYin(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times,
-                          start_days, thumbnail_path, productLink, productTitle)
+                post_video_DouYin(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times, start_days, thumbnail_path, productLink, productTitle)
             case 4:
-                post_video_ks(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times,
-                          start_days)
+                post_video_ks(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times, start_days)
+            case 5:
+                post_video_facebook(title, file_list, tags, account_list, enableTimer, videos_per_day, daily_times, start_days, is_reel)
+            case 6:
+                post_video_instagram(title, file_list, tags, account_list, enableTimer, videos_per_day, daily_times, start_days)
+            case 7:
+                post_video_twitter(title, file_list, tags, account_list, enableTimer, videos_per_day, daily_times, start_days)
+            case 8:
+                post_video_threads(title, file_list, tags, account_list, enableTimer, videos_per_day, daily_times, start_days)
+            case 9:
+                post_video_pinterest(title, file_list, tags, account_list, enableTimer, videos_per_day, daily_times, start_days, link, board)
+            case 10:
+                post_video_zalo(title, file_list, tags, account_list, enableTimer, videos_per_day, daily_times, start_days, category or "")
+            case 11:
+                post_video_youtube(title, file_list, tags, account_list, enableTimer, videos_per_day, daily_times, start_days, thumbnail_path, playlist, visibility)
+            case 12:
+                post_video_tiktok(title, file_list, tags, account_list, enableTimer, videos_per_day, daily_times, start_days)
             case _:
-                return jsonify({"code": 400, "msg": f"不支持的平台类型: {type}", "data": None}), 400
+                return jsonify({"code": 400, "msg": f"Không hỗ trợ loại nền tảng: {type}", "data": None}), 400
 
-        # 返回响应给客户端
-        return jsonify(
-            {
-                "code": 200,
-                "msg": "发布任务已提交",
-                "data": None
-            }), 200
+        # Save to publish history
+        try:
+            with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                INSERT INTO publish_history (title, platform_type, platform_name, account_count, file_count, status)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ''', (title, platform_type, platform_names.get(platform_type, "Unknown"), len(account_list), len(file_list), 'Success'))
+                conn.commit()
+        except Exception as db_err:
+            print(f"[Record publish history error]: {db_err}")
+
+        return jsonify({
+            "code": 200,
+            "msg": "Nhiệm vụ đăng bài đã được gửi thành công",
+            "data": None
+        }), 200
     except Exception as e:
-        print(f"发布视频时出错: {str(e)}")
+        print(f"Lỗi khi đăng bài: {str(e)}")
         return jsonify({
             "code": 500,
-            "msg": f"发布失败: {str(e)}",
+            "msg": f"Đăng bài thất bại: {str(e)}",
             "data": None
         }), 500
+
+
+@app.route('/getPublishHistory', methods=['GET'])
+def get_publish_history():
+    """Lấy danh sách lịch sử đăng bài gần đây"""
+    try:
+        with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM publish_history ORDER BY id DESC LIMIT 50")
+            rows = cursor.fetchall()
+            return jsonify({
+                "code": 200,
+                "msg": "success",
+                "data": [dict(r) for r in rows]
+            }), 200
+    except Exception as e:
+        return jsonify({
+            "code": 500,
+            "msg": f"Lấy lịch sử thất bại: {e}",
+            "data": []
+        }), 500
+
 
 
 @app.route('/updateUserinfo', methods=['POST'])

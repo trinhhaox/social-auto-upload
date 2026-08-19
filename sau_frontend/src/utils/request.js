@@ -34,35 +34,34 @@ request.interceptors.response.use(
     if (data.code === 200 || data.success) {
       return data
     } else {
-      ElMessage.error(data.msg || data.message || '请求失败')
-      return Promise.reject(new Error(data.msg || data.message || '请求失败'))
+      ElMessage.error(data.msg || data.message || 'Yêu cầu thất bại')
+      return Promise.reject(new Error(data.msg || data.message || 'Yêu cầu thất bại'))
     }
   },
   (error) => {
-    console.error('响应错误:', error)
+    console.error('Lỗi phản hồi HTTP:', error)
     
     // 处理HTTP错误状态码
     if (error.response) {
       const { status } = error.response
       switch (status) {
         case 401:
-          ElMessage.error('未授权，请重新登录')
-          // 可以在这里处理登录跳转
+          ElMessage.error('Chưa được xác thực, vui lòng thử lại')
           break
         case 403:
-          ElMessage.error('拒绝访问')
+          ElMessage.error('Từ chối quyền truy cập')
           break
         case 404:
-          ElMessage.error('请求地址不存在')
+          ElMessage.error('Địa chỉ API không tồn tại')
           break
         case 500:
-          ElMessage.error('服务器内部错误')
+          ElMessage.error('Lỗi máy chủ nội bộ')
           break
         default:
-          ElMessage.error('网络错误')
+          ElMessage.error('Lỗi mạng kết nối')
       }
     } else {
-      ElMessage.error('网络连接失败')
+      ElMessage.error('Kết nối mạng thất bại')
     }
     
     return Promise.reject(error)
