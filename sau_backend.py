@@ -11,7 +11,20 @@ from myUtils.auth import check_cookie
 from flask import Flask, request, jsonify, Response, render_template, send_from_directory
 from werkzeug.utils import secure_filename
 from conf import BASE_DIR
-from myUtils.login import get_tencent_cookie, douyin_cookie_gen, get_ks_cookie, xiaohongshu_cookie_gen
+from myUtils.login import (
+    get_tencent_cookie,
+    douyin_cookie_gen,
+    get_ks_cookie,
+    xiaohongshu_cookie_gen,
+    get_facebook_cookie,
+    get_instagram_cookie,
+    get_twitter_cookie,
+    get_threads_cookie,
+    get_pinterest_cookie,
+    get_zalo_cookie,
+    get_youtube_cookie,
+    get_tiktok_cookie,
+)
 from myUtils.postVideo import (
     post_video_tencent,
     post_video_DouYin,
@@ -803,29 +816,90 @@ def download_cookie():
         }), 500
 
 
+@app.route('/addAccountManual', methods=['POST'])
+def add_account_manual():
+    data = request.get_json()
+    if not data:
+        return jsonify({"code": 400, "msg": "Dữ liệu không được để trống", "data": None}), 400
+
+    account_name = data.get('name')
+    platform_type = data.get('type')
+    if not account_name or not platform_type:
+        return jsonify({"code": 400, "msg": "Thiếu tên tài khoản hoặc loại nền tảng", "data": None}), 400
+
+    try:
+        uuid_v1 = uuid.uuid1()
+        cookies_dir = Path(BASE_DIR / "cookiesFile")
+        cookies_dir.mkdir(parents=True, exist_ok=True)
+        file_path = f"{uuid_v1}.json"
+
+        # Tạo file cookie rỗng hoặc lưu file nếu có
+        cookie_file = cookies_dir / file_path
+        if not cookie_file.exists():
+            cookie_file.write_text("{}", encoding="utf-8")
+
+        with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+            INSERT INTO user_info (type, filePath, userName, status)
+            VALUES (?, ?, ?, ?)
+            ''', (int(platform_type), file_path, account_name, 0))
+            conn.commit()
+
+        return jsonify({
+            "code": 200,
+            "msg": "Thêm tài khoản thành công",
+            "data": {
+                "filePath": file_path,
+                "name": account_name,
+                "type": platform_type
+            }
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "code": 500,
+            "msg": f"Thêm tài khoản thất bại: {e}",
+            "data": None
+        }), 500
+
+
 # 包装函数：在线程中运行异步函数
-def run_async_function(type,id,status_queue):
-    match type:
-        case '1':
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(xiaohongshu_cookie_gen(id, status_queue))
-            loop.close()
-        case '2':
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(get_tencent_cookie(id,status_queue))
-            loop.close()
-        case '3':
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(douyin_cookie_gen(id,status_queue))
-            loop.close()
-        case '4':
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(get_ks_cookie(id,status_queue))
-            loop.close()
+def run_async_function(type, id, status_queue):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        match str(type):
+            case '1':
+                loop.run_until_complete(xiaohongshu_cookie_gen(id, status_queue))
+            case '2':
+                loop.run_until_complete(get_tencent_cookie(id, status_queue))
+            case '3':
+                loop.run_until_complete(douyin_cookie_gen(id, status_queue))
+            case '4':
+                loop.run_until_complete(get_ks_cookie(id, status_queue))
+            case '5':
+                loop.run_until_complete(get_facebook_cookie(id, status_queue))
+            case '6':
+                loop.run_until_complete(get_instagram_cookie(id, status_queue))
+            case '7':
+                loop.run_until_complete(get_twitter_cookie(id, status_queue))
+            case '8':
+                loop.run_until_complete(get_threads_cookie(id, status_queue))
+            case '9':
+                loop.run_until_complete(get_pinterest_cookie(id, status_queue))
+            case '10':
+                loop.run_until_complete(get_zalo_cookie(id, status_queue))
+            case '11':
+                loop.run_until_complete(get_youtube_cookie(id, status_queue))
+            case '12':
+                loop.run_until_complete(get_tiktok_cookie(id, status_queue))
+            case _:
+                status_queue.put("500")
+    except Exception as e:
+        print(f"[run_async_function error]: {e}")
+        status_queue.put("500")
+    finally:
+        loop.close()
 
 # SSE 流生成器函数
 def sse_stream(status_queue):
@@ -839,3 +913,4 @@ def sse_stream(status_queue):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0' ,port=5409)
+

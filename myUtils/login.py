@@ -316,5 +316,91 @@ async def xiaohongshu_cookie_gen(id,status_queue):
             print("✅ 用户状态已记录")
         status_queue.put("200")
 
-# a = asyncio.run(xiaohongshu_cookie_gen(4,None))
-# print(a)
+
+# Hàm đăng nhập tự động mở cửa sổ trình duyệt chung cho các nền tảng quốc tế và Zalo
+async def browser_login_gen(platform_type: int, login_url: str, id: str, status_queue):
+    print(f"🚀 Bắt đầu luồng đăng nhập trình duyệt cho platform type={platform_type}, account={id}")
+    async with async_playwright() as playwright:
+        options = {
+            'args': [
+                '--disable-blink-features=AutomationControlled',
+                '--lang=vi-VN,en-US',
+                '--start-maximized'
+            ],
+            'headless': False  # Luôn mở giao diện có cửa sổ để người dùng đăng nhập
+        }
+        if LOCAL_CHROME_PATH:
+            options['executable_path'] = LOCAL_CHROME_PATH
+
+        try:
+            browser = await playwright.chromium.launch(**options)
+            context = await browser.new_context(
+                viewport={'width': 1280, 'height': 800},
+                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+            )
+            context = await set_init_script(context)
+            page = await context.new_page()
+
+            await page.goto(login_url)
+            print(f"🌐 Đã mở trang đăng nhập: {login_url}")
+
+            # Đợi người dùng hoàn tất đăng nhập (hoặc tối đa 180s)
+            for _ in range(36):
+                await asyncio.sleep(5)
+                # Kiểm tra xem page có còn mở không
+                if page.is_closed():
+                    break
+                # Kiểm tra cookie đã có dữ liệu phiên đăng nhập
+                cookies = await context.cookies()
+                if len(cookies) > 5:
+                    # Đã có cookie phiên làm việc
+                    break
+
+            uuid_v1 = uuid.uuid1()
+            cookies_dir = Path(BASE_DIR / "cookiesFile")
+            cookies_dir.mkdir(parents=True, exist_ok=True)
+            cookie_file = cookies_dir / f"{uuid_v1}.json"
+            await context.storage_state(path=cookie_file)
+
+            # Lưu vào database
+            with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                INSERT INTO user_info (type, filePath, userName, status)
+                VALUES (?, ?, ?, ?)
+                ''', (int(platform_type), f"{uuid_v1}.json", id, 1))
+                conn.commit()
+                print(f"✅ Đã lưu tài khoản {id} vào cơ sở dữ liệu")
+
+            await context.close()
+            await browser.close()
+            status_queue.put("200")
+        except Exception as e:
+            print(f"❌ Lỗi đăng nhập platform {platform_type}: {e}")
+            status_queue.put("500")
+
+
+async def get_facebook_cookie(id, status_queue):
+    await browser_login_gen(5, "https://www.facebook.com/login", id, status_queue)
+
+async def get_instagram_cookie(id, status_queue):
+    await browser_login_gen(6, "https://www.instagram.com/accounts/login/", id, status_queue)
+
+async def get_twitter_cookie(id, status_queue):
+    await browser_login_gen(7, "https://x.com/i/flow/login", id, status_queue)
+
+async def get_threads_cookie(id, status_queue):
+    await browser_login_gen(8, "https://www.threads.net/login", id, status_queue)
+
+async def get_pinterest_cookie(id, status_queue):
+    await browser_login_gen(9, "https://www.pinterest.com/login/", id, status_queue)
+
+async def get_zalo_cookie(id, status_queue):
+    await browser_login_gen(10, "https://id.zalo.me/account?continue=https%3A%2F%2Foa.zalo.me%2Fmanage%2Fcontent%2Fvideo", id, status_queue)
+
+async def get_youtube_cookie(id, status_queue):
+    await browser_login_gen(11, "https://studio.youtube.com/", id, status_queue)
+
+async def get_tiktok_cookie(id, status_queue):
+    await browser_login_gen(12, "https://www.tiktok.com/login?lang=en", id, status_queue)
+

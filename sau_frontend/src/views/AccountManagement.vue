@@ -397,7 +397,14 @@
           />
         </el-form-item>
         
-        <!-- Vùng hiển thị mã QR -->
+        <el-form-item label="Phương thức" prop="loginMethod" v-if="dialogType === 'add'">
+          <el-radio-group v-model="accountForm.loginMethod" :disabled="sseConnecting">
+            <el-radio label="browser">Mở trình duyệt đăng nhập</el-radio>
+            <el-radio label="manual">Tạo nhanh tài khoản</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <!-- Vùng hiển thị mã QR / thông báo đăng nhập -->
         <div v-if="sseConnecting" class="qrcode-container">
           <div v-if="qrCodeData && !loginStatus" class="qrcode-wrapper">
             <p class="qrcode-tip">Dùng App trên điện thoại quét mã QR để đăng nhập</p>
@@ -636,6 +643,7 @@ const accountForm = reactive({
   id: null,
   name: '',
   platform: '',
+  loginMethod: 'browser',
   status: '正常'
 })
 
@@ -831,7 +839,15 @@ const connectSSE = (platform, name) => {
     '小红书': '1',
     '视频号': '2',
     '抖音': '3',
-    '快手': '4'
+    '快手': '4',
+    'Facebook': '5',
+    'Instagram': '6',
+    'Twitter': '7',
+    'Threads': '8',
+    'Pinterest': '9',
+    'Zalo': '10',
+    'YouTube': '11',
+    'TikTok': '12'
   }
 
   const type = platformTypeMap[platform] || '1'
@@ -918,29 +934,47 @@ const connectSSE = (platform, name) => {
 const submitAccountForm = () => {
   accountFormRef.value.validate(async (valid) => {
     if (valid) {
+      // 将平台名称转换为类型数字
+      const platformTypeMap = {
+        '小红书': 1,
+        '视频号': 2,
+        '抖音': 3,
+        '快手': 4,
+        'Facebook': 5,
+        'Instagram': 6,
+        'Twitter': 7,
+        'Threads': 8,
+        'Pinterest': 9,
+        'Zalo': 10,
+        'YouTube': 11,
+        'TikTok': 12
+      };
+      const type = platformTypeMap[accountForm.platform] || 1;
+
       if (dialogType.value === 'add') {
-        // 建立SSE连接
-        connectSSE(accountForm.platform, accountForm.name)
+        if (accountForm.loginMethod === 'manual') {
+          try {
+            const res = await http.post('/addAccountManual', {
+              name: accountForm.name,
+              type: type
+            })
+            if (res.code === 200) {
+              ElMessage.success('Thêm tài khoản thành công! Bạn có thể tải lên file Cookie ngay.')
+              dialogVisible.value = false
+              fetchAccounts()
+            } else {
+              ElMessage.error(res.msg || 'Thêm tài khoản thất bại')
+            }
+          } catch (error) {
+            ElMessage.error('Lỗi khi thêm tài khoản')
+          }
+        } else {
+          // 建立SSE连接 mở trình duyệt đăng nhập
+          connectSSE(accountForm.platform, accountForm.name)
+        }
       } else {
         // 编辑账号逻辑
         try {
-          // 将平台名称转换为类型数字
-          const platformTypeMap = {
-            '小红书': 1,
-            '视频号': 2,
-            '抖音': 3,
-            '快手': 4,
-            'Facebook': 5,
-            'Instagram': 6,
-            'Twitter': 7,
-            'Threads': 8,
-            'Pinterest': 9,
-            'Zalo': 10,
-            'YouTube': 11,
-            'TikTok': 12
-          };
-          const type = platformTypeMap[accountForm.platform] || 1;
-
           const res = await accountApi.updateAccount({
             id: accountForm.id,
             type: type,
