@@ -948,5 +948,7 @@ def sse_stream(status_queue):
             time.sleep(0.1)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0' ,port=5409)
+    host = os.getenv("SAU_HOST", "127.0.0.1")
+    port = int(os.getenv("SAU_PORT", 5409))
+    app.run(host=host, port=port)
 
