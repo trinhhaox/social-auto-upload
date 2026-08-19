@@ -115,51 +115,78 @@ def vite_svg():
 def index():  # put application's code here
     return send_from_directory(current_dir, 'index.html')
 
+import re
+
+def sanitize_filename(filename: str) -> str:
+    p = Path(filename)
+    stem = p.stem
+    ext = p.suffix if p.suffix else ".mp4"
+    # Lọc các ký tự cấm trên hệ điều hành nhưng giữ nguyên ký tự Unicode (tiếng Việt, tiếng Anh)
+    clean_stem = re.sub(r'[\/\\:*?"<>|]', '_', stem).strip()
+    if not clean_stem:
+        clean_stem = f"video_{uuid.uuid4().hex[:8]}"
+    return f"{clean_stem}{ext}"
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
         return jsonify({
             "code": 400,
             "data": None,
-            "msg": "No file part in the request"
+            "msg": "Không tìm thấy tệp trong yêu cầu"
         }), 400
     file = request.files['file']
-    if file.filename == '':
+    if not file or file.filename == '':
         return jsonify({
             "code": 400,
             "data": None,
-            "msg": "No selected file"
+            "msg": "Chưa chọn tệp để tải lên"
         }), 400
     try:
-        # 保存文件到指定位置
         uuid_v1 = uuid.uuid1()
-        print(f"UUID v1: {uuid_v1}")
-        safe_name = secure_filename(file.filename)
-        if not safe_name:
-            return jsonify({"code": 400, "data": None, "msg": "Invalid filename"}), 400
-        filepath = Path(BASE_DIR / "videoFile" / f"{uuid_v1}_{safe_name}")
-        file.save(filepath)
-        return jsonify({"code":200,"msg": "File uploaded successfully", "data": f"{uuid_v1}_{safe_name}"}), 200
+        original_name = file.filename
+        safe_name = sanitize_filename(original_name)
+        final_filename = f"{uuid_v1}_{safe_name}"
+
+        video_dir = Path(BASE_DIR / "videoFile")
+        video_dir.mkdir(parents=True, exist_ok=True)
+        filepath = video_dir / final_filename
+
+        file.save(str(filepath))
+        filesize_mb = round(float(os.path.getsize(filepath)) / (1024 * 1024), 2)
+
+        # Tự động ghi vào file_records để hiển thị trong Thư viện tư liệu
+        try:
+            with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                INSERT INTO file_records (filename, filesize, file_path)
+                VALUES (?, ?, ?)
+                ''', (original_name, filesize_mb, final_filename))
+                conn.commit()
+        except Exception as dbe:
+            print(f"[Record file error]: {dbe}")
+
+        return jsonify({
+            "code": 200,
+            "msg": "Tải tệp lên thành công",
+            "data": final_filename
+        }), 200
     except Exception as e:
-        return jsonify({"code":500,"msg": str(e),"data":None}), 500
+        print(f"Lỗi khi tải file: {str(e)}")
+        return jsonify({"code": 500, "msg": f"Tải lên thất bại: {str(e)}", "data": None}), 500
 
 @app.route('/getFile', methods=['GET'])
 def get_file():
-    # 获取 filename 参数
     filename = request.args.get('filename')
-
     if not filename:
-        return jsonify({"code": 400, "msg": "filename is required", "data": None}), 400
+        return jsonify({"code": 400, "msg": "Thiếu tham số tên tệp", "data": None}), 400
 
-    # 防止路径穿越攻击
     if '..' in filename or filename.startswith('/'):
-        return jsonify({"code": 400, "msg": "Invalid filename", "data": None}), 400
+        return jsonify({"code": 400, "msg": "Tên tệp không hợp lệ", "data": None}), 400
 
-    # 拼接完整路径
-    file_path = str(Path(BASE_DIR / "videoFile"))
-
-    # 返回文件
-    return send_from_directory(file_path,filename)
+    file_dir = str(Path(BASE_DIR / "videoFile"))
+    return send_from_directory(file_dir, filename)
 
 
 @app.route('/uploadSave', methods=['POST'])
@@ -168,52 +195,44 @@ def upload_save():
         return jsonify({
             "code": 400,
             "data": None,
-            "msg": "No file part in the request"
+            "msg": "Không tìm thấy tệp trong yêu cầu"
         }), 400
 
     file = request.files['file']
-    if file.filename == '':
+    if not file or file.filename == '':
         return jsonify({
             "code": 400,
             "data": None,
-            "msg": "No selected file"
+            "msg": "Chưa chọn tệp"
         }), 400
 
-    # 获取表单中的自定义文件名（可选）
     custom_filename = request.form.get('filename', None)
     if custom_filename:
-        filename = secure_filename(custom_filename + "." + file.filename.split('.')[-1])
+        filename = sanitize_filename(custom_filename + Path(file.filename).suffix)
     else:
-        filename = secure_filename(file.filename)
-    if not filename:
-        return jsonify({"code": 400, "data": None, "msg": "Invalid filename"}), 400
+        filename = sanitize_filename(file.filename)
 
     try:
-        # 生成 UUID v1
         uuid_v1 = uuid.uuid1()
-        print(f"UUID v1: {uuid_v1}")
-
-        # 构造文件名和路径
         final_filename = f"{uuid_v1}_{filename}"
         video_dir = Path(BASE_DIR / "videoFile")
         video_dir.mkdir(parents=True, exist_ok=True)
         filepath = video_dir / final_filename
 
-        # 保存文件
-        file.save(filepath)
+        file.save(str(filepath))
+        filesize_mb = round(float(os.path.getsize(filepath)) / (1024 * 1024), 2)
 
         with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                                INSERT INTO file_records (filename, filesize, file_path)
+            INSERT INTO file_records (filename, filesize, file_path)
             VALUES (?, ?, ?)
-                                ''', (filename, round(float(os.path.getsize(filepath)) / (1024 * 1024),2), final_filename))
+            ''', (filename, filesize_mb, final_filename))
             conn.commit()
-            print("✅ 上传文件已记录")
 
         return jsonify({
             "code": 200,
-            "msg": "File uploaded and saved successfully",
+            "msg": "Tải tệp và lưu thành công",
             "data": {
                 "filename": filename,
                 "filepath": final_filename
@@ -221,12 +240,13 @@ def upload_save():
         }), 200
 
     except Exception as e:
-        print(f"Upload failed: {e}")
+        print(f"Lỗi tải file lên: {e}")
         return jsonify({
             "code": 500,
-            "msg": f"upload failed: {e}",
+            "msg": f"Tải lên thất bại: {e}",
             "data": None
         }), 500
+
 
 @app.route('/getFiles', methods=['GET'])
 def get_all_files():
