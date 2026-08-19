@@ -70,25 +70,16 @@
 
 ## 💡功能特性
 
-| 平台 | 登录/账号准备 | 视频上传 | 图文上传 | 定时发布 | CLI | Skill | 说明 |
+| Nền tảng | Đăng nhập & Cookie | Video Upload | Đăng ảnh | Hẹn giờ | CLI | Web UI | Ghi chú |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 抖音 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 当前主线重构最完整 |
-| Bilibili | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | 运行时自动准备 `biliup` |
-| 小红书（浏览器版） | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 浏览器自动化，CLI/Skill 已接入 |
-| 快手 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 浏览器自动化，CLI/Skill 初版已接入 |
-| 视频号 | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | 浏览器自动化，对应 `tencent_uploader` |
-| 百家号 | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | 浏览器自动化 |
-| 支付宝生活号 | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | 浏览器自动化，支持生活号视频 |
-| 微博 | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | 浏览器自动化，标题最多 30 字 |
-| 虎扑 | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | 浏览器自动化，标题 4–40 字 |
-| TikTok | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | 当前示例走 Chrome 版实现 |
-| YouTube | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | 浏览器自动化（Studio），支持加入播放列表/可见性 |
-| Facebook | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | 浏览器自动化（Meta Business / Web），支持 Reels & Video |
-| Instagram | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | 浏览器自动化，支持 Reels & Video Post |
-| Twitter / X | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | 浏览器自动化，支持 Video Tweet & Post |
-| Threads | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | 浏览器自动化，支持 Thread Video & Post |
-| Pinterest | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | 浏览器自动化，支持 Video Pin & Idea Pin |
-| Zalo Video | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | 浏览器自动化，支持 Zalo OA Video |
+| Facebook | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | Meta Business / Web, hỗ trợ Reels & Video Fanpage |
+| Instagram | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | Tự động hóa trình duyệt, hỗ trợ Reels & Video Post |
+| TikTok Quốc tế | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | Tự động hóa trình duyệt TikTok Creator Studio |
+| YouTube Studio | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | Hỗ trợ tải lên video, playlist & thiết lập chế độ hiển thị |
+| Threads (Meta) | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | Tự động hóa trình duyệt, hỗ trợ Threads Video & Post |
+| Twitter / X | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | Tự động hóa trình duyệt, hỗ trợ Video Tweet |
+| Pinterest | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | Hỗ trợ Video Pin, Idea Pin & gán Board/Link |
+| Zalo Video | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | Hỗ trợ Zalo OA Video & kênh nội dung số |
 
 
 ### AI这么强，为什么还需要这个项目

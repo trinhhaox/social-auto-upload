@@ -65,12 +65,6 @@
                 <el-tooltip content="TikTok" placement="top" v-if="platformStats.tk > 0">
                   <el-tag size="small" type="success">TikTok: {{ platformStats.tk }}</el-tag>
                 </el-tooltip>
-                <el-tooltip content="Kuaishou" placement="top" v-if="platformStats.kuaishou > 0">
-                  <el-tag size="small" type="success">KS: {{ platformStats.kuaishou }}</el-tag>
-                </el-tooltip>
-                <el-tooltip content="Douyin" placement="top" v-if="platformStats.douyin > 0">
-                  <el-tag size="small" type="danger">Douyin: {{ platformStats.douyin }}</el-tag>
-                </el-tooltip>
               </div>
             </div>
           </el-card>
@@ -241,14 +235,10 @@ const platformStats = computed(() => {
   const zalo = accounts.filter(a => a.platform?.toLowerCase().includes('zalo')).length
   const yt = accounts.filter(a => a.platform?.toLowerCase().includes('youtube')).length
   const tk = accounts.filter(a => a.platform?.toLowerCase().includes('tiktok')).length
-  const kuaishou = accounts.filter(a => a.platform === '快手' || a.platform === 'Kuaishou').length
-  const douyin = accounts.filter(a => a.platform === '抖音' || a.platform === 'Douyin').length
-  const channels = accounts.filter(a => a.platform === '视频号' || a.platform === 'WeChat Channels').length
-  const xiaohongshu = accounts.filter(a => a.platform === '小红书' || a.platform === 'Xiaohongshu').length
   
-  const allCounts = [fb, insta, twitter, threads, pin, zalo, yt, tk, kuaishou, douyin, channels, xiaohongshu]
+  const allCounts = [fb, insta, twitter, threads, pin, zalo, yt, tk]
   const total = allCounts.filter(n => n > 0).length
-  return { total, fb, insta, twitter, threads, pin, zalo, yt, tk, kuaishou, douyin, channels, xiaohongshu }
+  return { total, fb, insta, twitter, threads, pin, zalo, yt, tk }
 })
 
 // 素材统计数据 - 从真实数据计算

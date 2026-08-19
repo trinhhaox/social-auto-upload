@@ -1,373 +1,105 @@
 <template>
   <div class="account-management">
     <div class="page-header">
-      <h1>Quản lý tài khoản</h1>
+      <div class="header-info">
+        <h1>Quản lý tài khoản</h1>
+        <p class="subtitle">Quản lý các tài khoản mạng xã hội & trạng thái Cookie đăng nhập</p>
+      </div>
+      <div class="header-actions">
+        <el-button type="primary" size="large" icon="Plus" @click="handleAddAccount">
+          + Thêm tài khoản
+        </el-button>
+        <el-button type="default" size="large" @click="fetchAccounts" :loading="appStore.isAccountRefreshing">
+          <el-icon :class="{ 'is-loading': appStore.isAccountRefreshing }"><Refresh /></el-icon>
+          <span>Làm mới</span>
+        </el-button>
+      </div>
     </div>
     
-    <div class="account-tabs">
-      <el-tabs v-model="activeTab" class="account-tabs-nav">
-        <el-tab-pane label="Tất cả" name="all">
-          <div class="account-list-container">
-            <div class="account-search">
-              <el-input
-                v-model="searchKeyword"
-                placeholder="Nhập tên hoặc tài khoản để tìm kiếm"
-                prefix-icon="Search"
-                clearable
-                @clear="handleSearch"
-                @input="handleSearch"
-              />
-              <div class="action-buttons">
-                <el-button type="primary" @click="handleAddAccount">Thêm tài khoản</el-button>
-                <el-button type="info" @click="fetchAccounts" :loading="false">
-                  <el-icon :class="{ 'is-loading': appStore.isAccountRefreshing }"><Refresh /></el-icon>
-                  <span v-if="appStore.isAccountRefreshing">Đang làm mới</span>
-                </el-button>
-              </div>
-            </div>
-            
-            <div v-if="filteredAccounts.length > 0" class="account-list">
-              <el-table :data="filteredAccounts" style="width: 100%">
-                <el-table-column label="Avatar" width="80">
-                  <template #default="scope">
-                    <el-avatar :src="getDefaultAvatar(scope.row.name)" :size="40" />
-                  </template>
-                </el-table-column>
-                <el-table-column prop="name" label="Tên tài khoản" width="180" />
-                <el-table-column prop="platform" label="Nền tảng">
-                  <template #default="scope">
-                    <el-tag
-                      :type="getPlatformTagType(scope.row.platform)"
-                      effect="plain"
-                    >
-                      {{ getPlatformDisplayName(scope.row.platform) }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="status" label="Trạng thái">
-                  <template #default="scope">
-                    <el-tag
-                      :type="getStatusTagType(scope.row.status)"
-                      effect="plain"
-                      :class="{'clickable-status': isStatusClickable(scope.row.status)}"
-                      @click="handleStatusClick(scope.row)"
-                    >
-                      <el-icon :class="(scope.row.status === '验证中' || scope.row.status === 'Đang xác thực') ? 'is-loading' : ''" v-if="scope.row.status === '验证中' || scope.row.status === 'Đang xác thực'">
-                        <Loading />
-                      </el-icon>
-                      {{ getStatusDisplayName(scope.row.status) }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column label="Thao tác">
-                  <template #default="scope">
-                    <el-button size="small" @click="handleEdit(scope.row)">Sửa</el-button>
-                    <el-button size="small" type="primary" :icon="Download" @click="handleDownloadCookie(scope.row)">Tải Cookie</el-button>
-                    <el-button size="small" type="info" :icon="Upload" @click="handleUploadCookie(scope.row)">Nhập Cookie</el-button>
-                    <el-button size="small" type="danger" @click="handleDelete(scope.row)">Xóa</el-button>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-            
-            <div v-else class="empty-data">
-              <el-empty description="Chưa có dữ liệu tài khoản" />
-            </div>
-          </div>
-        </el-tab-pane>
-        
-        <el-tab-pane label="Kuaishou" name="kuaishou">
-          <div class="account-list-container">
-            <div class="account-search">
-              <el-input
-                v-model="searchKeyword"
-                placeholder="Nhập tên hoặc tài khoản để tìm kiếm"
-                prefix-icon="Search"
-                clearable
-                @clear="handleSearch"
-                @input="handleSearch"
-              />
-              <div class="action-buttons">
-                <el-button type="primary" @click="handleAddAccount">Thêm tài khoản</el-button>
-                <el-button type="info" @click="fetchAccounts" :loading="false">
-                  <el-icon :class="{ 'is-loading': appStore.isAccountRefreshing }"><Refresh /></el-icon>
-                  <span v-if="appStore.isAccountRefreshing">Đang làm mới</span>
-                </el-button>
-              </div>
-            </div>
-            
-            <div v-if="filteredKuaishouAccounts.length > 0" class="account-list">
-              <el-table :data="filteredKuaishouAccounts" style="width: 100%">
-                <el-table-column label="Avatar" width="80">
-                  <template #default="scope">
-                    <el-avatar :src="getDefaultAvatar(scope.row.name)" :size="40" />
-                  </template>
-                </el-table-column>
-                <el-table-column prop="name" label="Tên tài khoản" width="180" />
-                <el-table-column prop="platform" label="Nền tảng">
-                  <template #default="scope">
-                    <el-tag
-                      :type="getPlatformTagType(scope.row.platform)"
-                      effect="plain"
-                    >
-                      {{ getPlatformDisplayName(scope.row.platform) }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="status" label="Trạng thái">
-                  <template #default="scope">
-                    <el-tag
-                      :type="getStatusTagType(scope.row.status)"
-                      effect="plain"
-                      :class="{'clickable-status': isStatusClickable(scope.row.status)}"
-                      @click="handleStatusClick(scope.row)"
-                    >
-                      <el-icon :class="(scope.row.status === '验证中' || scope.row.status === 'Đang xác thực') ? 'is-loading' : ''" v-if="scope.row.status === '验证中' || scope.row.status === 'Đang xác thực'">
-                        <Loading />
-                      </el-icon>
-                      {{ getStatusDisplayName(scope.row.status) }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column label="Thao tác">
-                  <template #default="scope">
-                    <el-button size="small" @click="handleEdit(scope.row)">Sửa</el-button>
-                    <el-button size="small" type="primary" :icon="Download" @click="handleDownloadCookie(scope.row)">Tải Cookie</el-button>
-                    <el-button size="small" type="info" :icon="Upload" @click="handleUploadCookie(scope.row)">Nhập Cookie</el-button>
-                    <el-button size="small" type="danger" @click="handleDelete(scope.row)">Xóa</el-button>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-            
-            <div v-else class="empty-data">
-              <el-empty description="Chưa có dữ liệu tài khoản Kuaishou" />
-            </div>
-          </div>
-        </el-tab-pane>
-        
-        <el-tab-pane label="Douyin" name="douyin">
-          <div class="account-list-container">
-            <div class="account-search">
-              <el-input
-                v-model="searchKeyword"
-                placeholder="Nhập tên hoặc tài khoản để tìm kiếm"
-                prefix-icon="Search"
-                clearable
-                @clear="handleSearch"
-                @input="handleSearch"
-              />
-              <div class="action-buttons">
-                <el-button type="primary" @click="handleAddAccount">Thêm tài khoản</el-button>
-                <el-button type="info" @click="fetchAccounts" :loading="false">
-                  <el-icon :class="{ 'is-loading': appStore.isAccountRefreshing }"><Refresh /></el-icon>
-                  <span v-if="appStore.isAccountRefreshing">Đang làm mới</span>
-                </el-button>
-              </div>
-            </div>
-            
-            <div v-if="filteredDouyinAccounts.length > 0" class="account-list">
-              <el-table :data="filteredDouyinAccounts" style="width: 100%">
-                <el-table-column label="Avatar" width="80">
-                  <template #default="scope">
-                    <el-avatar :src="getDefaultAvatar(scope.row.name)" :size="40" />
-                  </template>
-                </el-table-column>
-                <el-table-column prop="name" label="Tên tài khoản" width="180" />
-                <el-table-column prop="platform" label="Nền tảng">
-                  <template #default="scope">
-                    <el-tag
-                      :type="getPlatformTagType(scope.row.platform)"
-                      effect="plain"
-                    >
-                      {{ getPlatformDisplayName(scope.row.platform) }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="status" label="Trạng thái">
-                  <template #default="scope">
-                    <el-tag
-                      :type="getStatusTagType(scope.row.status)"
-                      effect="plain"
-                      :class="{'clickable-status': isStatusClickable(scope.row.status)}"
-                      @click="handleStatusClick(scope.row)"
-                    >
-                      <el-icon :class="(scope.row.status === '验证中' || scope.row.status === 'Đang xác thực') ? 'is-loading' : ''" v-if="scope.row.status === '验证中' || scope.row.status === 'Đang xác thực'">
-                        <Loading />
-                      </el-icon>
-                      {{ getStatusDisplayName(scope.row.status) }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column label="Thao tác">
-                  <template #default="scope">
-                    <el-button size="small" @click="handleEdit(scope.row)">Sửa</el-button>
-                    <el-button size="small" type="primary" :icon="Download" @click="handleDownloadCookie(scope.row)">Tải Cookie</el-button>
-                    <el-button size="small" type="info" :icon="Upload" @click="handleUploadCookie(scope.row)">Nhập Cookie</el-button>
-                    <el-button size="small" type="danger" @click="handleDelete(scope.row)">Xóa</el-button>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-            
-            <div v-else class="empty-data">
-              <el-empty description="Chưa có dữ liệu tài khoản Douyin" />
-            </div>
-          </div>
-        </el-tab-pane>
-        
-        <el-tab-pane label="WeChat Channels" name="channels">
-          <div class="account-list-container">
-            <div class="account-search">
-              <el-input
-                v-model="searchKeyword"
-                placeholder="Nhập tên hoặc tài khoản để tìm kiếm"
-                prefix-icon="Search"
-                clearable
-                @clear="handleSearch"
-                @input="handleSearch"
-              />
-              <div class="action-buttons">
-                <el-button type="primary" @click="handleAddAccount">Thêm tài khoản</el-button>
-                <el-button type="info" @click="fetchAccounts" :loading="false">
-                  <el-icon :class="{ 'is-loading': appStore.isAccountRefreshing }"><Refresh /></el-icon>
-                  <span v-if="appStore.isAccountRefreshing">Đang làm mới</span>
-                </el-button>
-              </div>
-            </div>
-            
-            <div v-if="filteredChannelsAccounts.length > 0" class="account-list">
-              <el-table :data="filteredChannelsAccounts" style="width: 100%">
-                <el-table-column label="Avatar" width="80">
-                  <template #default="scope">
-                    <el-avatar :src="getDefaultAvatar(scope.row.name)" :size="40" />
-                  </template>
-                </el-table-column>
-                <el-table-column prop="name" label="Tên tài khoản" width="180" />
-                <el-table-column prop="platform" label="Nền tảng">
-                  <template #default="scope">
-                    <el-tag
-                      :type="getPlatformTagType(scope.row.platform)"
-                      effect="plain"
-                    >
-                      {{ getPlatformDisplayName(scope.row.platform) }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="status" label="Trạng thái">
-                  <template #default="scope">
-                    <el-tag
-                      :type="getStatusTagType(scope.row.status)"
-                      effect="plain"
-                      :class="{'clickable-status': isStatusClickable(scope.row.status)}"
-                      @click="handleStatusClick(scope.row)"
-                    >
-                      <el-icon :class="(scope.row.status === '验证中' || scope.row.status === 'Đang xác thực') ? 'is-loading' : ''" v-if="scope.row.status === '验证中' || scope.row.status === 'Đang xác thực'">
-                        <Loading />
-                      </el-icon>
-                      {{ getStatusDisplayName(scope.row.status) }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column label="Thao tác">
-                  <template #default="scope">
-                    <el-button size="small" @click="handleEdit(scope.row)">Sửa</el-button>
-                    <el-button size="small" type="primary" :icon="Download" @click="handleDownloadCookie(scope.row)">Tải Cookie</el-button>
-                    <el-button size="small" type="info" :icon="Upload" @click="handleUploadCookie(scope.row)">Nhập Cookie</el-button>
-                    <el-button size="small" type="danger" @click="handleDelete(scope.row)">Xóa</el-button>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-            
-            <div v-else class="empty-data">
-              <el-empty description="Chưa có dữ liệu tài khoản WeChat Channels" />
-            </div>
-          </div>
-        </el-tab-pane>
-        
-        <el-tab-pane label="Xiaohongshu" name="xiaohongshu">
-          <div class="account-list-container">
-            <div class="account-search">
-              <el-input
-                v-model="searchKeyword"
-                placeholder="Nhập tên hoặc tài khoản để tìm kiếm"
-                prefix-icon="Search"
-                clearable
-                @clear="handleSearch"
-                @input="handleSearch"
-              />
-              <div class="action-buttons">
-                <el-button type="primary" @click="handleAddAccount">Thêm tài khoản</el-button>
-                <el-button type="info" @click="fetchAccounts" :loading="false">
-                  <el-icon :class="{ 'is-loading': appStore.isAccountRefreshing }"><Refresh /></el-icon>
-                  <span v-if="appStore.isAccountRefreshing">Đang làm mới</span>
-                </el-button>
-              </div>
-            </div>
-            
-            <div v-if="filteredXiaohongshuAccounts.length > 0" class="account-list">
-              <el-table :data="filteredXiaohongshuAccounts" style="width: 100%">
-                <el-table-column label="Avatar" width="80">
-                  <template #default="scope">
-                    <el-avatar :src="getDefaultAvatar(scope.row.name)" :size="40" />
-                  </template>
-                </el-table-column>
-                <el-table-column prop="name" label="Tên tài khoản" width="180" />
-                <el-table-column prop="platform" label="Nền tảng">
-                  <template #default="scope">
-                    <el-tag
-                      :type="getPlatformTagType(scope.row.platform)"
-                      effect="plain"
-                    >
-                      {{ getPlatformDisplayName(scope.row.platform) }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="status" label="Trạng thái">
-                  <template #default="scope">
-                    <el-tag
-                      :type="getStatusTagType(scope.row.status)"
-                      effect="plain"
-                      :class="{'clickable-status': isStatusClickable(scope.row.status)}"
-                      @click="handleStatusClick(scope.row)"
-                    >
-                      <el-icon :class="(scope.row.status === '验证中' || scope.row.status === 'Đang xác thực') ? 'is-loading' : ''" v-if="scope.row.status === '验证中' || scope.row.status === 'Đang xác thực'">
-                        <Loading />
-                      </el-icon>
-                      {{ getStatusDisplayName(scope.row.status) }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column label="Thao tác">
-                  <template #default="scope">
-                    <el-button size="small" @click="handleEdit(scope.row)">Sửa</el-button>
-                    <el-button size="small" type="primary" :icon="Download" @click="handleDownloadCookie(scope.row)">Tải Cookie</el-button>
-                    <el-button size="small" type="info" :icon="Upload" @click="handleUploadCookie(scope.row)">Nhập Cookie</el-button>
-                    <el-button size="small" type="danger" @click="handleDelete(scope.row)">Xóa</el-button>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-            
-            <div v-else class="empty-data">
-              <el-empty description="Chưa có dữ liệu tài khoản Xiaohongshu" />
-            </div>
-          </div>
-        </el-tab-pane>
-      </el-tabs>
+    <div class="account-container">
+      <div class="toolbar-wrapper">
+        <el-tabs v-model="activeTab" class="account-tabs-nav">
+          <el-tab-pane label="Tất cả" name="all" />
+          <el-tab-pane label="Facebook" name="facebook" />
+          <el-tab-pane label="Instagram" name="instagram" />
+          <el-tab-pane label="TikTok" name="tiktok" />
+          <el-tab-pane label="YouTube" name="youtube" />
+          <el-tab-pane label="Threads" name="threads" />
+          <el-tab-pane label="Twitter / X" name="twitter" />
+          <el-tab-pane label="Pinterest" name="pinterest" />
+          <el-tab-pane label="Zalo" name="zalo" />
+        </el-tabs>
+
+        <div class="search-wrap">
+          <el-input
+            v-model="searchKeyword"
+            placeholder="Tìm theo tên hoặc nền tảng..."
+            prefix-icon="Search"
+            clearable
+            @clear="handleSearch"
+            @input="handleSearch"
+          />
+        </div>
+      </div>
+
+      <div class="table-card">
+        <el-table :data="displayedAccounts" style="width: 100%" v-loading="appStore.isAccountRefreshing">
+          <el-table-column label="Avatar" width="80" align="center">
+            <template #default="scope">
+              <el-avatar :src="getDefaultAvatar(scope.row.name)" :size="40" />
+            </template>
+          </el-table-column>
+          <el-table-column prop="name" label="Tên tài khoản" width="220" />
+          <el-table-column prop="platform" label="Nền tảng" width="180">
+            <template #default="scope">
+              <el-tag :type="getPlatformTagType(scope.row.platform)" effect="plain">
+                {{ getPlatformDisplayName(scope.row.platform) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="status" label="Trạng thái" width="180">
+            <template #default="scope">
+              <el-tag
+                :type="getStatusTagType(scope.row.status)"
+                effect="plain"
+                :class="{'clickable-status': isStatusClickable(scope.row.status)}"
+                @click="handleStatusClick(scope.row)"
+              >
+                <el-icon class="is-loading" v-if="scope.row.status === '验证中' || scope.row.status === 'Đang xác thực'">
+                  <Loading />
+                </el-icon>
+                {{ getStatusDisplayName(scope.row.status) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="Thao tác" min-width="260">
+            <template #default="scope">
+              <el-button size="small" @click="handleEdit(scope.row)">Sửa</el-button>
+              <el-button size="small" type="primary" :icon="Download" @click="handleDownloadCookie(scope.row)">Tải Cookie</el-button>
+              <el-button size="small" type="info" :icon="Upload" @click="handleUploadCookie(scope.row)">Nhập Cookie</el-button>
+              <el-button size="small" type="danger" @click="handleDelete(scope.row)">Xóa</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <div v-if="displayedAccounts.length === 0 && !appStore.isAccountRefreshing" class="empty-data">
+          <el-empty description="Chưa có tài khoản nào">
+            <el-button type="primary" size="large" @click="handleAddAccount">+ Thêm tài khoản ngay</el-button>
+          </el-empty>
+        </div>
+      </div>
     </div>
     
     <!-- Hộp thoại Thêm/Sửa tài khoản -->
     <el-dialog
       v-model="dialogVisible"
-      :title="dialogType === 'add' ? 'Thêm tài khoản' : 'Chỉnh sửa tài khoản'"
-      width="500px"
+      :title="dialogType === 'add' ? 'Thêm tài khoản mới' : 'Chỉnh sửa tài khoản'"
+      width="520px"
       :close-on-click-modal="false"
       :close-on-press-escape="!sseConnecting"
       :show-close="!sseConnecting"
     >
-      <el-form :model="accountForm" label-width="110px" :rules="rules" ref="accountFormRef">
+      <el-form :model="accountForm" label-width="120px" :rules="rules" ref="accountFormRef">
         <el-form-item label="Nền tảng" prop="platform">
           <el-select 
             v-model="accountForm.platform" 
@@ -377,16 +109,12 @@
           >
             <el-option label="Facebook (Reels & Fanpage)" value="Facebook" />
             <el-option label="Instagram (Reels & Post)" value="Instagram" />
-            <el-option label="Twitter / X" value="Twitter" />
+            <el-option label="TikTok Quốc tế" value="TikTok" />
+            <el-option label="YouTube Studio" value="YouTube" />
             <el-option label="Threads (Meta)" value="Threads" />
+            <el-option label="Twitter / X" value="Twitter" />
             <el-option label="Pinterest" value="Pinterest" />
             <el-option label="Zalo Video / OA" value="Zalo" />
-            <el-option label="YouTube Studio" value="YouTube" />
-            <el-option label="TikTok Quốc tế" value="TikTok" />
-            <el-option label="Douyin (抖音)" value="抖音" />
-            <el-option label="Kuaishou (快手)" value="快手" />
-            <el-option label="WeChat Channels (视频号)" value="视频号" />
-            <el-option label="Xiaohongshu (小红书)" value="小红书" />
           </el-select>
         </el-form-item>
         <el-form-item label="Tên tài khoản" prop="name">
@@ -400,7 +128,7 @@
         <el-form-item label="Phương thức" prop="loginMethod" v-if="dialogType === 'add'">
           <el-radio-group v-model="accountForm.loginMethod" :disabled="sseConnecting">
             <el-radio label="browser">Mở trình duyệt đăng nhập</el-radio>
-            <el-radio label="manual">Tạo nhanh tài khoản</el-radio>
+            <el-radio label="manual">Tạo nhanh hồ sơ</el-radio>
           </el-radio-group>
         </el-form-item>
 
@@ -412,7 +140,7 @@
           </div>
           <div v-else-if="!qrCodeData && !loginStatus" class="loading-wrapper">
             <el-icon class="is-loading"><Refresh /></el-icon>
-            <span>Đang yêu cầu kết nối...</span>
+            <span>Đang mở trình duyệt kết nối...</span>
           </div>
           <div v-else-if="loginStatus === '200'" class="success-wrapper">
             <el-icon><CircleCheckFilled /></el-icon>
@@ -541,11 +269,7 @@ const getPlatformDisplayName = (platform) => {
     'Pinterest': 'Pinterest',
     'Zalo': 'Zalo Video / OA',
     'YouTube': 'YouTube Studio',
-    'TikTok': 'TikTok Quốc tế',
-    '快手': 'Kuaishou',
-    '抖音': 'Douyin',
-    '视频号': 'WeChat Channels',
-    '小红书': 'Xiaohongshu'
+    'TikTok': 'TikTok Quốc tế'
   }
   return map[platform] || platform
 }
@@ -554,8 +278,11 @@ const getPlatformDisplayName = (platform) => {
 const getStatusDisplayName = (status) => {
   const map = {
     '正常': 'Hoạt động',
-    '异常': 'Lỗi / Cần đăng nhập lại',
-    '验证中': 'Đang xác thực'
+    'Hoạt động': 'Hoạt động',
+    '异常': 'Chưa có Cookie',
+    'Chưa có Cookie': 'Chưa có Cookie',
+    '验证中': 'Đang xác thực',
+    'Đang xác thực': 'Đang xác thực'
   }
   return map[status] || status
 }
@@ -570,18 +297,14 @@ const getPlatformTagType = (platform) => {
     'Pinterest': 'danger',
     'Zalo': 'primary',
     'YouTube': 'danger',
-    'TikTok': 'success',
-    '快手': 'success',
-    '抖音': 'danger',
-    '视频号': 'warning',
-    '小红书': 'info'
+    'TikTok': 'success'
   }
-  return typeMap[platform] || 'info'
+  return typeMap[platform] || 'primary'
 }
 
-// 判断状态是否可点击（异常状态可点击）
+// 判断状态是否可点击
 const isStatusClickable = (status) => {
-  return status === '异常' || status === 'Lỗi / Cần đăng nhập lại';
+  return status === 'Chưa có Cookie' || status === '异常' || status === 'Lỗi / Cần đăng nhập lại';
 }
 
 // 获取状态标签类型
@@ -591,41 +314,31 @@ const getStatusTagType = (status) => {
   } else if (status === '正常' || status === 'Hoạt động') {
     return 'success';
   } else {
-    return 'danger';
+    return 'warning';
   }
 }
 
 // 处理状态点击事件
 const handleStatusClick = (row) => {
   if (isStatusClickable(row.status)) {
-    // 触发重新登录流程
-    handleReLogin(row)
+    handleEdit(row)
   }
 }
 
-// 过滤后的账号列表
-const filteredAccounts = computed(() => {
-  if (!searchKeyword.value) return accountStore.accounts
-  return accountStore.accounts.filter(account =>
-    account.name.toLowerCase().includes(searchKeyword.value.toLowerCase())
-  )
-})
-
-// 按平台过滤的账号列表
-const filteredKuaishouAccounts = computed(() => {
-  return filteredAccounts.value.filter(account => account.platform === '快手' || account.platform === 'Kuaishou')
-})
-
-const filteredDouyinAccounts = computed(() => {
-  return filteredAccounts.value.filter(account => account.platform === '抖音' || account.platform === 'Douyin')
-})
-
-const filteredChannelsAccounts = computed(() => {
-  return filteredAccounts.value.filter(account => account.platform === '视频号' || account.platform === 'WeChat Channels')
-})
-
-const filteredXiaohongshuAccounts = computed(() => {
-  return filteredAccounts.value.filter(account => account.platform === '小红书' || account.platform === 'Xiaohongshu')
+// 过滤后的账号列表 (Theo tab và từ khóa tìm kiếm)
+const displayedAccounts = computed(() => {
+  let list = accountStore.accounts || []
+  if (activeTab.value && activeTab.value !== 'all') {
+    list = list.filter(account => account.platform?.toLowerCase().includes(activeTab.value.toLowerCase()))
+  }
+  if (searchKeyword.value && searchKeyword.value.trim()) {
+    const kw = searchKeyword.value.trim().toLowerCase()
+    list = list.filter(account =>
+      (account.name && account.name.toLowerCase().includes(kw)) ||
+      (account.platform && account.platform.toLowerCase().includes(kw))
+    )
+  }
+  return list
 })
 
 // 搜索处理
@@ -780,31 +493,6 @@ const handleUploadCookie = (row) => {
   }
 
   input.click()
-}
-
-// 重新登录账号
-const handleReLogin = (row) => {
-  // 设置表单信息
-  dialogType.value = 'edit'
-  Object.assign(accountForm, {
-    id: row.id,
-    name: row.name,
-    platform: row.platform,
-    status: row.status
-  })
-
-  // 重置SSE状态
-  sseConnecting.value = false
-  qrCodeData.value = ''
-  loginStatus.value = ''
-
-  // 显示对话框
-  dialogVisible.value = true
-
-  // 立即开始登录流程
-  setTimeout(() => {
-    connectSSE(row.platform, row.name)
-  }, 300)
 }
 
 // 获取默认头像
@@ -1027,55 +715,70 @@ onBeforeUnmount(() => {
 
 .account-management {
   .page-header {
-    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #ebeef5;
     
-    h1 {
-      font-size: 24px;
-      color: $text-primary;
-      margin: 0;
+    .header-info {
+      h1 {
+        font-size: 24px;
+        font-weight: 600;
+        color: $text-primary;
+        margin: 0 0 6px 0;
+      }
+      .subtitle {
+        font-size: 14px;
+        color: $text-secondary;
+        margin: 0;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
     }
   }
   
-  .account-tabs {
+  .account-container {
     background-color: #fff;
-    border-radius: 4px;
-    box-shadow: $box-shadow-light;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+    padding: 20px;
     
-    .account-tabs-nav {
-      padding: 20px;
-    }
-  }
-  
-  .account-list-container {
-    .account-search {
+    .toolbar-wrapper {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       margin-bottom: 20px;
-      
-      .el-input {
-        width: 300px;
-      }
-      
-      .action-buttons {
-        display: flex;
-        gap: 10px;
+      flex-wrap: wrap;
+      gap: 16px;
+
+      .account-tabs-nav {
+        flex: 1;
+        min-width: 320px;
         
-        .el-icon.is-loading {
-          animation: rotate 1s linear infinite;
+        :deep(.el-tabs__header) {
+          margin: 0;
         }
       }
+
+      .search-wrap {
+        width: 280px;
+      }
     }
-    
-    .account-list {
-      margin-bottom: 20px;
-    }
-    
-    .empty-data {
-      padding: 40px 0;
+
+    .table-card {
+      .empty-data {
+        padding: 60px 0;
+        text-align: center;
+      }
     }
   }
   
-  // 二维码容器样式
   .clickable-status {
     cursor: pointer;
     transition: all 0.3s;
@@ -1092,7 +795,10 @@ onBeforeUnmount(() => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 250px;
+    min-height: 220px;
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 16px;
     
     .qrcode-wrapper {
       text-align: center;
@@ -1100,11 +806,12 @@ onBeforeUnmount(() => {
       .qrcode-tip {
         margin-bottom: 15px;
         color: #606266;
+        font-size: 14px;
       }
       
       .qrcode-image {
-        max-width: 200px;
-        max-height: 200px;
+        max-width: 180px;
+        max-height: 180px;
         border: 1px solid #ebeef5;
         background-color: black;
       }
@@ -1115,10 +822,10 @@ onBeforeUnmount(() => {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 12px;
       
       .el-icon {
-        font-size: 48px;
+        font-size: 40px;
         
         &.is-loading {
           animation: rotate 1s linear infinite;
@@ -1126,7 +833,8 @@ onBeforeUnmount(() => {
       }
       
       span {
-        font-size: 16px;
+        font-size: 15px;
+        font-weight: 500;
       }
     }
     

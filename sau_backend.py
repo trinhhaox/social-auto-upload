@@ -50,6 +50,8 @@ def init_db():
     try:
         db_path = Path(BASE_DIR / "db" / "database.db")
         db_path.parent.mkdir(parents=True, exist_ok=True)
+        Path(BASE_DIR / "videoFile").mkdir(parents=True, exist_ok=True)
+        Path(BASE_DIR / "cookiesFile").mkdir(parents=True, exist_ok=True)
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
             cursor.execute('''
@@ -193,7 +195,9 @@ def upload_save():
 
         # 构造文件名和路径
         final_filename = f"{uuid_v1}_{filename}"
-        filepath = Path(BASE_DIR / "videoFile" / f"{uuid_v1}_{filename}")
+        video_dir = Path(BASE_DIR / "videoFile")
+        video_dir.mkdir(parents=True, exist_ok=True)
+        filepath = video_dir / final_filename
 
         # 保存文件
         file.save(filepath)

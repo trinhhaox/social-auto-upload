@@ -533,16 +533,12 @@ const batchPublishType = ref('info')
 const platforms = [
   { key: 5, name: 'Facebook (Reels & Fanpage)' },
   { key: 6, name: 'Instagram (Reels & Post)' },
-  { key: 7, name: 'Twitter / X' },
-  { key: 8, name: 'Threads (Meta)' },
-  { key: 9, name: 'Pinterest (Video Pin)' },
-  { key: 10, name: 'Zalo Video / OA' },
-  { key: 11, name: 'YouTube Studio' },
   { key: 12, name: 'TikTok Quốc tế' },
-  { key: 3, name: 'Douyin (抖音)' },
-  { key: 4, name: 'Kuaishou (快手)' },
-  { key: 2, name: 'WeChat Channels (视频号)' },
-  { key: 1, name: 'Xiaohongshu (小红书)' }
+  { key: 11, name: 'YouTube Studio' },
+  { key: 8, name: 'Threads (Meta)' },
+  { key: 7, name: 'Twitter / X' },
+  { key: 9, name: 'Pinterest (Video Pin)' },
+  { key: 10, name: 'Zalo Video / OA' }
 ]
 
 const defaultTabInit = {
@@ -556,7 +552,7 @@ const defaultTabInit = {
   link: '', // Pinterest link / destination link
   board: '', // Pinterest board
   isReel: true, // Facebook / Instagram Reel toggle
-  category: '', // Zalo / WeChat category
+  category: '', // Zalo category
   productLink: '', // 商品链接
   productTitle: '', // 商品名称
   selectedTopics: [], // 话题列表（不带#号）
@@ -566,7 +562,7 @@ const defaultTabInit = {
   startDays: 0, // 从今天开始计算的发布天数，0表示明天，1表示后天
   publishStatus: null, // 发布状态，包含message和type
   publishing: false, // 发布状态，用于控制按钮loading效果
-  isDraft: false, // 是否保存为草稿，仅视频号平台可见
+  isDraft: false,
   isOriginal: false // 是否标记为原创
 }
 
@@ -596,10 +592,6 @@ const accountStore = useAccountStore()
 // 根据选择的平台获取可用账号列表
 const availableAccounts = computed(() => {
   const platformMap = {
-    1: '小红书',
-    2: '视频号',
-    3: '抖音',
-    4: '快手',
     5: 'Facebook',
     6: 'Instagram',
     7: 'Twitter',
