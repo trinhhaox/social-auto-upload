@@ -531,8 +531,9 @@ def postVideo():
     visibility = data.get('visibility', 'public')
 
     # Parameters validation
-    if not file_list:
-        return jsonify({"code": 400, "msg": "Danh sách tệp không được để trống", "data": None}), 400
+    post_type = data.get('postType', 'video') # 'text', 'image', 'video'
+    if post_type != 'text' and not file_list:
+        return jsonify({"code": 400, "msg": "Danh sách tệp không được để trống khi đăng kèm ảnh/video", "data": None}), 400
     if not account_list:
         return jsonify({"code": 400, "msg": "Danh sách tài khoản không được để trống", "data": None}), 400
     if not type:
@@ -592,14 +593,14 @@ def postVideo():
                 cursor.execute('''
                 INSERT INTO publish_history (title, platform_type, platform_name, account_count, file_count, status)
                 VALUES (?, ?, ?, ?, ?, ?)
-                ''', (title, platform_type, platform_names.get(platform_type, "Unknown"), len(account_list), len(file_list), 'Success'))
+                ''', (f"[{post_type.upper()}] {title}", platform_type, platform_names.get(platform_type, "Unknown"), len(account_list), len(file_list), 'Success'))
                 conn.commit()
         except Exception as db_err:
             print(f"[Record publish history error]: {db_err}")
 
         return jsonify({
             "code": 200,
-            "msg": "Nhiệm vụ đăng bài đã được gửi thành công",
+            "msg": f"Nhiệm vụ đăng bài ({post_type}) đã được gửi thành công",
             "data": None
         }), 200
     except Exception as e:
@@ -700,24 +701,35 @@ def postVideoBatch():
         print("Account List:", account_list)
         match type:
             case 1:
-                post_video_xhs(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times,
-                               start_days)
+                post_video_xhs(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times, start_days)
             case 2:
-                post_video_tencent(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times,
-                                   start_days, is_draft)
+                post_video_tencent(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times, start_days, is_draft)
             case 3:
-                post_video_DouYin(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times,
-                          start_days, productLink, productTitle)
+                post_video_DouYin(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times, start_days, productLink, productTitle)
             case 4:
-                post_video_ks(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times,
-                          start_days)
-    # 返回响应给客户端
-    return jsonify(
-        {
-            "code": 200,
-            "msg": None,
-            "data": None
-        }), 200
+                post_video_ks(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times, start_days)
+            case 5:
+                post_video_facebook(title, file_list, tags, account_list, enableTimer, videos_per_day, daily_times, start_days)
+            case 6:
+                post_video_instagram(title, file_list, tags, account_list, enableTimer, videos_per_day, daily_times, start_days)
+            case 7:
+                post_video_twitter(title, file_list, tags, account_list, enableTimer, videos_per_day, daily_times, start_days)
+            case 8:
+                post_video_threads(title, file_list, tags, account_list, enableTimer, videos_per_day, daily_times, start_days)
+            case 9:
+                post_video_pinterest(title, file_list, tags, account_list, enableTimer, videos_per_day, daily_times, start_days)
+            case 10:
+                post_video_zalo(title, file_list, tags, account_list, enableTimer, videos_per_day, daily_times, start_days)
+            case 11:
+                post_video_youtube(title, file_list, tags, account_list, enableTimer, videos_per_day, daily_times, start_days)
+            case 12:
+                post_video_tiktok(title, file_list, tags, account_list, enableTimer, videos_per_day, daily_times, start_days)
+
+    return jsonify({
+        "code": 200,
+        "msg": "Nhiệm vụ đăng bài hàng loạt đã hoàn tất",
+        "data": None
+    }), 200
 
 # Cookie文件上传API
 @app.route('/uploadCookie', methods=['POST'])

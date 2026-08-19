@@ -62,44 +62,88 @@
             />
           </div>
 
-          <!-- Khu vực tải lên Video -->
-          <div class="upload-section">
-            <h3>Video</h3>
+          <!-- Lựa chọn Loại nội dung bài đăng -->
+          <div class="content-type-section">
+            <h3>Định dạng bài đăng</h3>
+            <el-radio-group v-model="tab.postType" size="large" class="post-type-group">
+              <el-radio-button label="text">
+                <el-icon><Document /></el-icon>
+                <span>Chỉ văn bản</span>
+              </el-radio-button>
+              <el-radio-button label="image">
+                <el-icon><Picture /></el-icon>
+                <span>Kèm hình ảnh</span>
+              </el-radio-button>
+              <el-radio-button label="video">
+                <el-icon><VideoCamera /></el-icon>
+                <span>Kèm video</span>
+              </el-radio-button>
+            </el-radio-group>
+          </div>
+
+          <!-- Khu vực tải lên Đa phương tiện (Nếu không phải chỉ Text) -->
+          <div class="upload-section" v-if="tab.postType !== 'text'">
+            <div class="upload-section-header">
+              <h3>{{ tab.postType === 'image' ? 'Hình ảnh đính kèm' : 'Video đính kèm' }}</h3>
+              <span class="upload-tip-text">
+                {{ tab.postType === 'image' ? 'Hỗ trợ JPG, PNG, WEBP, GIF' : 'Hỗ trợ MP4, MOV, AVI' }}
+              </span>
+            </div>
+            
             <div class="upload-options">
               <el-button type="primary" @click="showUploadOptions(tab)" class="upload-btn">
                 <el-icon><Upload /></el-icon>
-                Tải lên Video
+                <span>{{ tab.postType === 'image' ? 'Tải lên hình ảnh' : 'Tải lên Video' }}</span>
               </el-button>
+              <span v-if="tab.fileList.length === 0" class="file-status-hint">Chưa có tệp nào được chọn</span>
             </div>
             
             <!-- Danh sách tệp đã tải lên -->
             <div v-if="tab.fileList.length > 0" class="uploaded-files">
-              <h4>Tệp đã chọn:</h4>
-              <div class="file-list">
-                <div v-for="(file, index) in tab.fileList" :key="index" class="file-item">
-                  <el-link :href="file.url" target="_blank" type="primary">{{ file.name }}</el-link>
-                  <span class="file-size">{{ (file.size / 1024 / 1024).toFixed(2) }}MB</span>
-                  <el-button type="danger" size="small" @click="removeFile(tab, index)">Xóa</el-button>
+              <h4>Tệp đã chọn ({{ tab.fileList.length }}):</h4>
+              <div class="file-list-grid">
+                <div v-for="(file, index) in tab.fileList" :key="index" class="file-item-card">
+                  <div class="file-preview">
+                    <img v-if="tab.postType === 'image'" :src="file.url" alt="preview" class="thumb-img" />
+                    <div v-else class="video-placeholder">
+                      <el-icon><VideoCamera /></el-icon>
+                    </div>
+                  </div>
+                  <div class="file-info-block">
+                    <el-link :href="file.url" target="_blank" type="primary" class="file-name-link">{{ file.name }}</el-link>
+                    <span class="file-size">{{ (file.size / 1024 / 1024).toFixed(2) }}MB</span>
+                  </div>
+                  <el-button type="danger" circle size="small" icon="Delete" @click="removeFile(tab, index)" />
                 </div>
               </div>
             </div>
           </div>
 
+          <!-- Thông báo khi chọn bài đăng chỉ Text -->
+          <div class="text-only-notice" v-else>
+            <el-alert
+              title="Đang chọn chế độ: Chỉ đăng văn bản (Status / Tweet / Bài viết). Bạn chỉ cần soạn Tiêu đề và Hashtag bên dưới."
+              type="info"
+              :closable="false"
+              show-icon
+            />
+          </div>
+
           <!-- Dialog chọn nguồn tải lên -->
           <el-dialog
             v-model="uploadOptionsVisible"
-            title="Chọn phương thức tải video"
-            width="400px"
+            :title="currentUploadTab?.postType === 'image' ? 'Chọn phương thức tải hình ảnh' : 'Chọn phương thức tải video'"
+            width="420px"
             class="upload-options-dialog"
           >
             <div class="upload-options-content">
-              <el-button type="primary" @click="selectLocalUpload" class="option-btn">
+              <el-button type="primary" size="large" @click="selectLocalUpload" class="option-btn">
                 <el-icon><Upload /></el-icon>
-                Tải từ máy tính
+                <span>Tải từ máy tính</span>
               </el-button>
-              <el-button type="success" @click="selectMaterialLibrary" class="option-btn">
+              <el-button type="success" size="large" @click="selectMaterialLibrary" class="option-btn">
                 <el-icon><Folder /></el-icon>
-                Chọn từ Thư viện
+                <span>Chọn từ Thư viện</span>
               </el-button>
             </div>
           </el-dialog>
@@ -107,7 +151,7 @@
           <!-- Dialog tải từ máy tính -->
           <el-dialog
             v-model="localUploadVisible"
-            title="Tải video từ máy tính"
+            :title="currentUploadTab?.postType === 'image' ? 'Tải hình ảnh từ máy tính' : 'Tải video từ máy tính'"
             width="600px"
             class="local-upload-dialog"
           >
@@ -119,16 +163,16 @@
               :on-success="(response, file) => handleUploadSuccess(response, file, currentUploadTab)"
               :on-error="handleUploadError"
               multiple
-              accept="video/*"
+              :accept="currentUploadTab?.postType === 'image' ? 'image/*' : 'video/*'"
               :headers="authHeaders"
             >
               <el-icon class="el-icon--upload"><Upload /></el-icon>
               <div class="el-upload__text">
-                Kéo thả video vào đây, hoặc <em>nhấn để tải lên</em>
+                Kéo thả tệp vào đây, hoặc <em>nhấn để tải lên</em>
               </div>
               <template #tip>
                 <div class="el-upload__tip">
-                  Hỗ trợ MP4, AVI, MOV... Có thể tải nhiều tệp cùng lúc
+                  {{ currentUploadTab?.postType === 'image' ? 'Hỗ trợ JPG, PNG, WEBP, GIF...' : 'Hỗ trợ MP4, AVI, MOV...' }} Có thể tải nhiều tệp cùng lúc
                 </div>
               </template>
             </el-upload>
@@ -492,7 +536,7 @@
 
 <script setup>
 import { ref, reactive, computed } from 'vue'
-import { Upload, Plus, Close, Folder } from '@element-plus/icons-vue'
+import { Upload, Plus, Close, Folder, Document, Picture, VideoCamera, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useAccountStore } from '@/stores/account'
 import { useAppStore } from '@/stores/app'
@@ -544,6 +588,7 @@ const platforms = [
 const defaultTabInit = {
   name: 'tab1',
   label: 'Bài đăng 1',
+  postType: 'video', // 'text', 'image', 'video'
   fileList: [], // 后端返回的文件名列表
   displayFileList: [], // 用于显示的文件列表
   selectedAccounts: [], // 选中的账号ID列表
@@ -793,10 +838,11 @@ const confirmPublish = async (tab) => {
   tab.publishing = true // 设置发布状态为进行中
 
   // 数据验证
-  if (tab.fileList.length === 0) {
-    ElMessage.error('Vui lòng tải lên hoặc chọn video trước')
+  if (tab.postType !== 'text' && tab.fileList.length === 0) {
+    const mediaName = tab.postType === 'image' ? 'hình ảnh' : 'video'
+    ElMessage.error(`Vui lòng tải lên hoặc chọn ${mediaName} đính kèm trước`)
     tab.publishing = false
-    throw new Error('Vui lòng tải lên hoặc chọn video trước')
+    throw new Error(`Vui lòng tải lên hoặc chọn ${mediaName} đính kèm trước`)
   }
   if (!tab.title.trim()) {
     ElMessage.error('Vui lòng nhập tiêu đề bài đăng')
@@ -817,6 +863,7 @@ const confirmPublish = async (tab) => {
   // 构造发布数据，符合后端API格式
   const publishData = {
     type: tab.selectedPlatform,
+    postType: tab.postType || 'video',
     title: tab.title,
     tags: tab.selectedTopics, // 不带#号的话题列表
     fileList: tab.fileList.map(file => file.path), // 只发送文件路径
@@ -1197,7 +1244,119 @@ const batchPublish = async () => {
           margin: 0 0 10px 0;
         }
         
-        .upload-section,
+        .content-type-section {
+          margin-bottom: 24px;
+          background: #f8fafc;
+          padding: 16px 20px;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+
+          .post-type-group {
+            display: flex;
+            gap: 12px;
+
+            :deep(.el-radio-button__inner) {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              padding: 10px 20px;
+              font-weight: 500;
+            }
+          }
+        }
+
+        .text-only-notice {
+          margin-bottom: 24px;
+        }
+
+        .upload-section {
+          margin-bottom: 30px;
+
+          .upload-section-header {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 12px;
+
+            .upload-tip-text {
+              font-size: 13px;
+              color: #909399;
+            }
+          }
+
+          .upload-options {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+
+            .file-status-hint {
+              font-size: 13px;
+              color: #94a3b8;
+            }
+          }
+
+          .file-list-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+
+            .file-item-card {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              background: #f8fafc;
+              border: 1px solid #e2e8f0;
+              border-radius: 6px;
+              padding: 8px 12px;
+
+              .file-preview {
+                width: 44px;
+                height: 44px;
+                border-radius: 4px;
+                overflow: hidden;
+                background: #e2e8f0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+
+                .thumb-img {
+                  width: 100%;
+                  height: 100%;
+                  object-fit: cover;
+                }
+
+                .video-placeholder {
+                  font-size: 22px;
+                  color: #64748b;
+                }
+              }
+
+              .file-info-block {
+                flex: 1;
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+
+                .file-name-link {
+                  font-size: 13px;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  display: block;
+                }
+
+                .file-size {
+                  font-size: 11px;
+                  color: #94a3b8;
+                }
+              }
+            }
+          }
+        }
+
         .account-section,
         .platform-section,
         .title-section,
