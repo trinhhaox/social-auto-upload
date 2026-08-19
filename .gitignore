@@ -2,6 +2,12 @@
 __pycache__/
 *.py[cod]
 *$py.class
+browser_profiles/
+cookiesFile/*.json
+!cookiesFile/.gitkeep
+videoFile/*
+!videoFile/.gitkeep
+database.db
 
 # C extensions
 *.so

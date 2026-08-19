@@ -1,7 +1,8 @@
 import asyncio
+import json
 import sqlite3
 
-from playwright.async_api import async_playwright
+from patchright.async_api import async_playwright
 
 from myUtils.auth import check_cookie
 from utils.base_social_media import set_init_script
@@ -321,46 +322,96 @@ async def xiaohongshu_cookie_gen(id,status_queue):
 async def browser_login_gen(platform_type: int, login_url: str, id: str, status_queue):
     print(f"🚀 Bắt đầu luồng đăng nhập trình duyệt cho platform type={platform_type}, account={id}")
     async with async_playwright() as playwright:
+        user_data_dir = BASE_DIR / "browser_profiles" / f"profile_{platform_type}_{id}"
+        user_data_dir.mkdir(parents=True, exist_ok=True)
+
+        launch_args = [
+            '--disable-blink-features=AutomationControlled',
+            '--no-sandbox',
+            '--disable-infobars',
+            '--start-maximized',
+            '--lang=vi-VN,en-US',
+            '--disable-features=IsolateOrigins,site-per-process'
+        ]
+
         options = {
-            'args': [
-                '--disable-blink-features=AutomationControlled',
-                '--lang=vi-VN,en-US',
-                '--start-maximized'
-            ],
-            'headless': False  # Luôn mở giao diện có cửa sổ để người dùng đăng nhập
+            'headless': False,  # Luôn mở giao diện cửa sổ
+            'args': launch_args,
+            'ignore_default_args': ['--enable-automation'],  # QUAN TRỌNG: Loại bỏ cờ automation để Google không chặn
+            'viewport': {'width': 1280, 'height': 800},
+            'user_agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
         }
+
         if LOCAL_CHROME_PATH:
             options['executable_path'] = LOCAL_CHROME_PATH
 
         try:
-            browser = await playwright.chromium.launch(**options)
-            context = await browser.new_context(
-                viewport={'width': 1280, 'height': 800},
-                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+            # Sử dụng persistent context để vượt qua hoàn toàn cơ chế bảo mật của Google và các mạng xã hội
+            context = await playwright.chromium.launch_persistent_context(
+                user_data_dir=str(user_data_dir),
+                **options
             )
-            context = await set_init_script(context)
-            page = await context.new_page()
+            # Triệt tiêu triệt để dấu hiệu automation
+            await context.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', {
+                    get: () => undefined
+                });
+                window.chrome = {
+                    runtime: {}
+                };
+            """)
+
+            pages = context.pages
+            page = pages[0] if pages else await context.new_page()
 
             await page.goto(login_url)
             print(f"🌐 Đã mở trang đăng nhập: {login_url}")
 
-            # Đợi người dùng hoàn tất đăng nhập (hoặc tối đa 180s)
-            for _ in range(36):
-                await asyncio.sleep(5)
-                # Kiểm tra xem page có còn mở không
+            # Đợi người dùng hoàn tất đăng nhập (hoặc tối đa 240s)
+            for _ in range(80):
+                await asyncio.sleep(3)
                 if page.is_closed():
                     break
-                # Kiểm tra cookie đã có dữ liệu phiên đăng nhập
                 cookies = await context.cookies()
-                if len(cookies) > 5:
-                    # Đã có cookie phiên làm việc
+                cookie_names = [c.get('name', '') for c in cookies]
+
+                # Điều kiện phát hiện đăng nhập thành công theo từng nền tảng
+                is_logged_in = False
+                if platform_type == 11:  # YouTube
+                    if ('SID' in cookie_names or 'SSID' in cookie_names or 'LOGIN_INFO' in cookie_names) and ('accounts.google.com' not in page.url or 'studio.youtube.com' in page.url):
+                        is_logged_in = True
+                elif platform_type == 5:  # Facebook
+                    if 'c_user' in cookie_names or 'xs' in cookie_names:
+                        is_logged_in = True
+                elif platform_type == 6:  # Instagram
+                    if 'sessionid' in cookie_names or 'ds_user_id' in cookie_names:
+                        is_logged_in = True
+                elif platform_type == 12:  # TikTok
+                    if 'sessionid' in cookie_names or 'sessionid_ss' in cookie_names:
+                        is_logged_in = True
+                elif platform_type == 7:  # Twitter / X
+                    if 'auth_token' in cookie_names or 'ct0' in cookie_names:
+                        is_logged_in = True
+                elif len(cookies) >= 5 and ('login' not in page.url.lower() and 'signin' not in page.url.lower()):
+                    is_logged_in = True
+
+                if is_logged_in:
+                    print(f"✅ Đã phát hiện phiên đăng nhập thành công cho platform {platform_type}!")
+                    await asyncio.sleep(2)  # Đợi cookie ghi hoàn chỉnh
                     break
 
             uuid_v1 = uuid.uuid1()
             cookies_dir = Path(BASE_DIR / "cookiesFile")
             cookies_dir.mkdir(parents=True, exist_ok=True)
             cookie_file = cookies_dir / f"{uuid_v1}.json"
-            await context.storage_state(path=cookie_file)
+            
+            try:
+                await context.storage_state(path=str(cookie_file))
+            except Exception as se:
+                print(f"[storage_state fallback]: {se}")
+                cookies = await context.cookies()
+                with open(cookie_file, 'w', encoding='utf-8') as f:
+                    json.dump({"cookies": cookies, "origins": []}, f, ensure_ascii=False, indent=2)
 
             # Lưu vào database
             with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
@@ -373,7 +424,6 @@ async def browser_login_gen(platform_type: int, login_url: str, id: str, status_
                 print(f"✅ Đã lưu tài khoản {id} vào cơ sở dữ liệu")
 
             await context.close()
-            await browser.close()
             status_queue.put("200")
         except Exception as e:
             print(f"❌ Lỗi đăng nhập platform {platform_type}: {e}")
@@ -399,8 +449,75 @@ async def get_zalo_cookie(id, status_queue):
     await browser_login_gen(10, "https://id.zalo.me/account?continue=https%3A%2F%2Foa.zalo.me%2Fmanage%2Fcontent%2Fvideo", id, status_queue)
 
 async def get_youtube_cookie(id, status_queue):
-    await browser_login_gen(11, "https://studio.youtube.com/", id, status_queue)
+    print(f"🚀 Bắt đầu luồng đăng nhập YouTube Studio (Patchright Chrome) cho account={id}")
+    async with async_playwright() as playwright:
+        try:
+            # Sử dụng Patchright với channel="chrome" để loại bỏ 100% cờ bot detection của Google
+            browser = await playwright.chromium.launch(
+                headless=False,
+                channel="chrome",
+                args=[
+                    '--disable-blink-features=AutomationControlled',
+                    '--no-sandbox',
+                    '--disable-infobars',
+                    '--start-maximized',
+                    '--lang=vi-VN,en-US'
+                ]
+            )
+            context = await browser.new_context(
+                viewport={'width': 1280, 'height': 800},
+                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+            )
+            context = await set_init_script(context)
+            page = await context.new_page()
+
+            # Mở studio.youtube.com để Google kích hoạt flow đăng nhập tự nhiên
+            await page.goto("https://studio.youtube.com", wait_until="domcontentloaded")
+            print(f"🔐 Đã mở YouTube Studio, vui lòng đăng nhập tài khoản Google...")
+
+            ok = False
+            for _ in range(300):
+                await asyncio.sleep(2)
+                if page.is_closed():
+                    break
+                if "/channel/" in page.url or ("studio.youtube.com" in page.url and "signin" not in page.url.lower() and "rejected" not in page.url.lower()):
+                    await asyncio.sleep(3)
+                    ok = True
+                    break
+
+            if ok:
+                uuid_v1 = uuid.uuid1()
+                cookies_dir = Path(BASE_DIR / "cookiesFile")
+                cookies_dir.mkdir(parents=True, exist_ok=True)
+                cookie_file = cookies_dir / f"{uuid_v1}.json"
+                try:
+                    await context.storage_state(path=str(cookie_file))
+                except Exception as se:
+                    print(f"[YouTube storage_state fallback]: {se}")
+                    cookies = await context.cookies()
+                    with open(cookie_file, 'w', encoding='utf-8') as f:
+                        json.dump({"cookies": cookies, "origins": []}, f, ensure_ascii=False, indent=2)
+
+                with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
+                    cursor = conn.cursor()
+                    cursor.execute('''
+                    INSERT INTO user_info (type, filePath, userName, status)
+                    VALUES (?, ?, ?, ?)
+                    ''', (11, f"{uuid_v1}.json", id, 1))
+                    conn.commit()
+                    print(f"✅ Đã lưu tài khoản YouTube {id} vào cơ sở dữ liệu")
+
+                await browser.close()
+                status_queue.put("200")
+            else:
+                await browser.close()
+                status_queue.put("500")
+        except Exception as e:
+            print(f"❌ Lỗi đăng nhập YouTube: {e}")
+            status_queue.put("500")
 
 async def get_tiktok_cookie(id, status_queue):
     await browser_login_gen(12, "https://www.tiktok.com/login?lang=en", id, status_queue)
+
+
 
