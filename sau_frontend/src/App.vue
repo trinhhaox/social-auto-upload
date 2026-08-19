@@ -5,7 +5,7 @@
         <div class="sidebar">
           <div class="logo">
             <img v-show="isCollapse" src="/vite.svg" alt="Logo" class="logo-img">
-            <h2 v-show="!isCollapse">自媒体自动化运营系统</h2>
+            <h2 v-show="!isCollapse">Social Auto Upload</h2>
           </div>
           <el-menu
             :router="true"
@@ -18,23 +18,23 @@
           >
             <el-menu-item index="/">
               <el-icon><HomeFilled /></el-icon>
-              <span>首页</span>
+              <span>Trang chủ</span>
             </el-menu-item>
             <el-menu-item index="/account-management">
               <el-icon><User /></el-icon>
-              <span>账号管理</span>
+              <span>Quản lý tài khoản</span>
             </el-menu-item>
             <el-menu-item index="/material-management">
               <el-icon><Picture /></el-icon>
-              <span>素材管理</span>
+              <span>Quản lý tư liệu</span>
             </el-menu-item>
             <el-menu-item index="/publish-center">
               <el-icon><Upload /></el-icon>
-              <span>发布中心</span>
+              <span>Trung tâm đăng bài</span>
             </el-menu-item>
             <el-menu-item index="/about">
               <el-icon><DataAnalysis /></el-icon>
-              <span>关于</span>
+              <span>Giới thiệu</span>
             </el-menu-item>
           </el-menu>
         </div>

@@ -1,70 +1,70 @@
 <template>
   <div class="material-management">
     <div class="page-header">
-      <h1>素材管理</h1>
+      <h1>Quản lý tư liệu</h1>
     </div>
     
     <div class="material-list-container">
       <div class="material-search">
         <el-input
           v-model="searchKeyword"
-          placeholder="输入文件名搜索"
+          placeholder="Nhập tên tệp để tìm kiếm..."
           prefix-icon="Search"
           clearable
           @clear="handleSearch"
           @input="handleSearch"
         />
         <div class="action-buttons">
-          <el-button type="primary" @click="handleUploadMaterial">上传素材</el-button>
+          <el-button type="primary" @click="handleUploadMaterial">Tải lên tư liệu</el-button>
           <el-button type="info" @click="fetchMaterials" :loading="false">
             <el-icon :class="{ 'is-loading': isRefreshing }"><Refresh /></el-icon>
-            <span v-if="isRefreshing">刷新中</span>
+            <span v-if="isRefreshing">Đang làm mới</span>
           </el-button>
         </div>
       </div>
       
       <div v-if="filteredMaterials.length > 0" class="material-list">
         <el-table :data="filteredMaterials" style="width: 100%">
-          <el-table-column prop="uuid" label="UUID" width="180" />
-          <el-table-column prop="filename" label="文件名" width="300" />
-          <el-table-column prop="filesize" label="文件大小" width="120">
+          <el-table-column prop="uuid" label="Mã UUID" width="180" />
+          <el-table-column prop="filename" label="Tên tệp" width="300" />
+          <el-table-column prop="filesize" label="Dung lượng" width="120">
             <template #default="scope">
               {{ scope.row.filesize }} MB
             </template>
           </el-table-column>
-          <el-table-column prop="upload_time" label="上传时间" width="180" />
-          <el-table-column label="操作">
+          <el-table-column prop="upload_time" label="Thời gian tải lên" width="180" />
+          <el-table-column label="Thao tác">
             <template #default="scope">
-              <el-button size="small" @click="handlePreview(scope.row)">预览</el-button>
-              <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+              <el-button size="small" @click="handlePreview(scope.row)">Xem trước</el-button>
+              <el-button size="small" type="danger" @click="handleDelete(scope.row)">Xóa</el-button>
             </template>
           </el-table-column>
         </el-table>
       </div>
       
       <div v-else class="empty-data">
-        <el-empty description="暂无素材数据" />
+        <el-empty description="Chưa có dữ liệu tư liệu" />
       </div>
     </div>
     
-    <!-- 上传对话框 -->
+    <!-- Dialog Upload -->
     <el-dialog
       v-model="uploadDialogVisible"
-      title="上传素材"
+      title="Tải lên tư liệu"
       width="40%"
       @close="handleUploadDialogClose"
     >
       <div class="upload-form">
-        <el-form label-width="80px">
-          <el-form-item label="文件名称:">
+        <el-form label-width="130px">
+          <el-form-item label="Tên tệp tùy chỉnh:">
             <el-input
               v-model="customFilename"
-              placeholder="选填 (仅单个文件时生效)"
+              placeholder="Tùy chọn (chỉ có tác dụng khi chọn 1 tệp)"
               :disabled="customFilenameDisabled"
               clearable
             />
           </el-form-item>
-          <el-form-item label="选择文件">
+          <el-form-item label="Chọn tệp">
             <el-upload
               class="upload-demo"
               drag
@@ -76,16 +76,16 @@
             >
               <el-icon class="el-icon--upload"><Upload /></el-icon>
               <div class="el-upload__text">
-                将文件拖到此处，或<em>点击上传</em>
+                Kéo thả tệp vào đây, hoặc <em>nhấn để tải lên</em>
               </div>
               <template #tip>
                 <div class="el-upload__tip">
-                  支持视频、图片等格式文件，可一次选择多个文件
+                  Hỗ trợ video (MP4, AVI...), hình ảnh. Có thể chọn nhiều tệp cùng lúc
                 </div>
               </template>
             </el-upload>
           </el-form-item>
-          <el-form-item label="上传列表" v-if="fileList.length > 0">
+          <el-form-item label="Danh sách tải" v-if="fileList.length > 0">
             <div class="upload-file-list">
               <div v-for="file in fileList" :key="file.uid" class="upload-file-item">
                 <span class="file-name">{{ file.name }}</span>
@@ -104,18 +104,18 @@
       </div>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="uploadDialogVisible = false">取消</el-button>
+          <el-button @click="uploadDialogVisible = false">Hủy</el-button>
           <el-button type="primary" @click="submitUpload" :loading="isUploading">
-            {{ isUploading ? '上传中' : '确认上传' }}
+            {{ isUploading ? 'Đang tải lên...' : 'Xác nhận tải lên' }}
           </el-button>
         </div>
       </template>
     </el-dialog>
     
-    <!-- 预览对话框 -->
+    <!-- Dialog Preview -->
     <el-dialog
       v-model="previewDialogVisible"
-      title="素材预览"
+      title="Xem trước tư liệu"
       width="50%"
       :top="'10vh'"
     >
@@ -123,17 +123,17 @@
         <div v-if="isVideoFile(currentMaterial.filename)" class="video-preview">
           <video controls style="max-width: 100%; max-height: 60vh;">
             <source :src="getPreviewUrl(currentMaterial.file_path)" type="video/mp4">
-            您的浏览器不支持视频播放
+            Trình duyệt của bạn không hỗ trợ phát video
           </video>
         </div>
         <div v-else-if="isImageFile(currentMaterial.filename)" class="image-preview">
           <img :src="getPreviewUrl(currentMaterial.file_path)" style="max-width: 100%; max-height: 60vh;" />
         </div>
         <div v-else class="file-info">
-          <p>文件名: {{ currentMaterial.filename }}</p>
-          <p>文件大小: {{ currentMaterial.filesize }} MB</p>
-          <p>上传时间: {{ currentMaterial.upload_time }}</p>
-          <el-button type="primary" @click="downloadFile(currentMaterial)">下载文件</el-button>
+          <p>Tên tệp: {{ currentMaterial.filename }}</p>
+          <p>Dung lượng: {{ currentMaterial.filesize }} MB</p>
+          <p>Thời gian tải lên: {{ currentMaterial.upload_time }}</p>
+          <el-button type="primary" @click="downloadFile(currentMaterial)">Tải tệp về</el-button>
         </div>
       </div>
     </el-dialog>
@@ -183,13 +183,13 @@ const fetchMaterials = async () => {
     
     if (response.code === 200) {
       appStore.setMaterials(response.data)
-      ElMessage.success('刷新成功')
+      ElMessage.success('Làm mới danh sách thành công')
     } else {
-      ElMessage.error('获取素材列表失败')
+      ElMessage.error('Lấy danh sách tư liệu thất bại')
     }
   } catch (error) {
     console.error('获取素材列表出错:', error)
-    ElMessage.error('获取素材列表失败')
+    ElMessage.error('Lấy danh sách tư liệu thất bại')
   } finally {
     isRefreshing.value = false
   }
@@ -246,7 +246,7 @@ const handleFileRemove = (file, uploadFileList) => {
 // 提交上传
 const submitUpload = async () => {
   if (fileList.value.length === 0) {
-    ElMessage.warning('请选择要上传的文件')
+    ElMessage.warning('Vui lòng chọn tệp để tải lên')
     return
   }
   
@@ -256,7 +256,7 @@ const submitUpload = async () => {
     try {
       // 确保文件对象存在
       if (!file || !file.raw) {
-        ElMessage.warning(`文件 ${file.name} 对象无效，已跳过`)
+        ElMessage.warning(`Tệp ${file.name} không hợp lệ, đã bỏ qua`)
         continue
       }
       
@@ -295,15 +295,15 @@ const submitUpload = async () => {
       })
       
       if (response.code === 200) {
-        ElMessage.success(`文件 ${file.name} 上传成功`)
+        ElMessage.success(`Tệp ${file.name} đã tải lên thành công`)
         const progressData = uploadProgress.value[file.uid];
-        if(progressData) progressData.speed = '完成';
+        if(progressData) progressData.speed = 'Hoàn tất';
       } else {
-        ElMessage.error(`文件 ${file.name} 上传失败: ${response.msg || '未知错误'}`)
+        ElMessage.error(`Tệp ${file.name} tải lên thất bại: ${response.msg || 'Lỗi không xác định'}`)
       }
     } catch (error) {
       console.error(`上传文件 ${file.name} 出错:`, error)
-      ElMessage.error(`文件 ${file.name} 上传失败: ${error.message || '未知错误'}`)
+      ElMessage.error(`Tệp ${file.name} tải lên thất bại: ${error.message || 'Lỗi không xác định'}`)
     }
   }
   
@@ -317,14 +317,14 @@ const submitUpload = async () => {
 const handlePreview = async (material) => {
   currentMaterial.value = null
   previewDialogVisible.value = true
-  ElMessage.info('加载中...')
+  ElMessage.info('Đang tải...')
   try {
     // 等待一小段时间以确保对话框已打开
     await new Promise(resolve => setTimeout(resolve, 100))
     currentMaterial.value = material
   } catch (error) {
     console.error('预览素材出错:', error)
-    ElMessage.error('预览加载失败')
+    ElMessage.error('Không thể tải bản xem trước')
     previewDialogVisible.value = false
   }
 }
@@ -332,11 +332,11 @@ const handlePreview = async (material) => {
 // 删除素材
 const handleDelete = (material) => {
   ElMessageBox.confirm(
-    `确定要删除素材 ${material.filename} 吗？`,
-    '警告',
+    `Bạn có chắc chắn muốn xóa tư liệu "${material.filename}" không?`,
+    'Cảnh báo',
     {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+      confirmButtonText: 'Xác nhận xóa',
+      cancelButtonText: 'Hủy',
       type: 'warning',
     }
   )
@@ -346,13 +346,13 @@ const handleDelete = (material) => {
         
         if (response.code === 200) {
           appStore.removeMaterial(material.id)
-          ElMessage.success('删除成功')
+          ElMessage.success('Đã xóa tư liệu thành công')
         } else {
-          ElMessage.error(response.msg || '删除失败')
+          ElMessage.error(response.msg || 'Xóa tư liệu thất bại')
         }
       } catch (error) {
         console.error('删除素材出错:', error)
-        ElMessage.error('删除失败')
+        ElMessage.error('Xóa tư liệu thất bại')
       }
     })
     .catch(() => {

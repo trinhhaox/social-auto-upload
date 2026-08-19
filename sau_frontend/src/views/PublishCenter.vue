@@ -1,6 +1,6 @@
 <template>
   <div class="publish-center">
-    <!-- Tab管理区域 -->
+    <!-- Tab quản lý các bài đăng -->
     <div class="tab-management">
       <div class="tab-header">
         <div class="tab-list">
@@ -28,7 +28,7 @@
             class="add-tab-btn"
           >
             <el-icon><Plus /></el-icon>
-            添加Tab
+            Thêm Tab
           </el-button>
           <el-button 
             type="success" 
@@ -37,13 +37,13 @@
             :loading="batchPublishing"
             class="batch-publish-btn"
           >
-            批量发布
+            Đăng hàng loạt
           </el-button>
         </div>
       </div>
     </div>
 
-    <!-- 内容区域 -->
+    <!-- Vùng nội dung cấu hình đăng -->
     <div class="publish-content">
       <div class="tab-content-wrapper">
         <div 
@@ -52,7 +52,7 @@
           v-show="activeTab === tab.name"
           class="tab-content"
         >
-          <!-- 发布状态提示 -->
+          <!-- Trạng thái đăng -->
           <div v-if="tab.publishStatus" class="publish-status">
             <el-alert
               :title="tab.publishStatus.message"
@@ -62,52 +62,52 @@
             />
           </div>
 
-          <!-- 视频上传区域 -->
+          <!-- Khu vực tải lên Video -->
           <div class="upload-section">
-            <h3>视频</h3>
+            <h3>Video</h3>
             <div class="upload-options">
               <el-button type="primary" @click="showUploadOptions(tab)" class="upload-btn">
                 <el-icon><Upload /></el-icon>
-                上传视频
+                Tải lên Video
               </el-button>
             </div>
             
-            <!-- 已上传文件列表 -->
+            <!-- Danh sách tệp đã tải lên -->
             <div v-if="tab.fileList.length > 0" class="uploaded-files">
-              <h4>已上传文件：</h4>
+              <h4>Tệp đã chọn:</h4>
               <div class="file-list">
                 <div v-for="(file, index) in tab.fileList" :key="index" class="file-item">
                   <el-link :href="file.url" target="_blank" type="primary">{{ file.name }}</el-link>
                   <span class="file-size">{{ (file.size / 1024 / 1024).toFixed(2) }}MB</span>
-                  <el-button type="danger" size="small" @click="removeFile(tab, index)">删除</el-button>
+                  <el-button type="danger" size="small" @click="removeFile(tab, index)">Xóa</el-button>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- 上传选项弹窗 -->
+          <!-- Dialog chọn nguồn tải lên -->
           <el-dialog
             v-model="uploadOptionsVisible"
-            title="选择上传方式"
+            title="Chọn phương thức tải video"
             width="400px"
             class="upload-options-dialog"
           >
             <div class="upload-options-content">
               <el-button type="primary" @click="selectLocalUpload" class="option-btn">
                 <el-icon><Upload /></el-icon>
-                本地上传
+                Tải từ máy tính
               </el-button>
               <el-button type="success" @click="selectMaterialLibrary" class="option-btn">
                 <el-icon><Folder /></el-icon>
-                素材库
+                Chọn từ Thư viện
               </el-button>
             </div>
           </el-dialog>
 
-          <!-- 本地上传弹窗 -->
+          <!-- Dialog tải từ máy tính -->
           <el-dialog
             v-model="localUploadVisible"
-            title="本地上传"
+            title="Tải video từ máy tính"
             width="600px"
             class="local-upload-dialog"
           >
@@ -124,20 +124,20 @@
             >
               <el-icon class="el-icon--upload"><Upload /></el-icon>
               <div class="el-upload__text">
-                将视频文件拖到此处，或<em>点击上传</em>
+                Kéo thả video vào đây, hoặc <em>nhấn để tải lên</em>
               </div>
               <template #tip>
                 <div class="el-upload__tip">
-                  支持MP4、AVI等视频格式，可上传多个文件
+                  Hỗ trợ MP4, AVI, MOV... Có thể tải nhiều tệp cùng lúc
                 </div>
               </template>
             </el-upload>
           </el-dialog>
 
-          <!-- 批量发布进度对话框 -->
+          <!-- Dialog tiến trình đăng hàng loạt -->
           <el-dialog
             v-model="batchPublishDialogVisible"
-            title="批量发布进度"
+            title="Tiến trình đăng hàng loạt"
             width="500px"
             :close-on-click-modal="false"
             :close-on-press-escape="false"
@@ -149,10 +149,10 @@
                 :status="publishProgress === 100 ? 'success' : ''"
               />
               <div v-if="currentPublishingTab" class="current-publishing">
-                正在发布：{{ currentPublishingTab.label }}
+                Đang xử lý: {{ currentPublishingTab.label }}
               </div>
               
-              <!-- 发布结果列表 -->
+              <!-- Kết quả đăng -->
               <div class="publish-results" v-if="publishResults.length > 0">
                 <div 
                   v-for="(result, index) in publishResults" 
@@ -174,23 +174,23 @@
                   @click="cancelBatchPublish" 
                   :disabled="publishProgress === 100"
                 >
-                  取消发布
+                  Hủy đăng
                 </el-button>
                 <el-button 
                   type="primary" 
                   @click="batchPublishDialogVisible = false"
                   v-if="publishProgress === 100"
                 >
-                  关闭
+                  Đóng
                 </el-button>
               </div>
             </template>
           </el-dialog>
 
-          <!-- 素材库选择弹窗 -->
+          <!-- Dialog chọn từ Thư viện tư liệu -->
           <el-dialog
             v-model="materialLibraryVisible"
-            title="选择素材"
+            title="Chọn video từ Thư viện tư liệu"
             width="800px"
             class="material-library-dialog"
           >
@@ -217,15 +217,15 @@
             </div>
             <template #footer>
               <div class="dialog-footer">
-                <el-button @click="materialLibraryVisible = false">取消</el-button>
-                <el-button type="primary" @click="confirmMaterialSelection">确定</el-button>
+                <el-button @click="materialLibraryVisible = false">Hủy</el-button>
+                <el-button type="primary" @click="confirmMaterialSelection">Xác nhận chọn</el-button>
               </div>
             </template>
           </el-dialog>
 
-          <!-- 账号选择 -->
+          <!-- Chọn Tài khoản -->
           <div class="account-section">
-            <h3>账号</h3>
+            <h3>Tài khoản đăng</h3>
             <div class="account-display">
               <div class="selected-accounts">
                 <el-tag
@@ -244,15 +244,15 @@
                 @click="openAccountDialog(tab)"
                 class="select-account-btn"
               >
-                选择账号
+                Chọn tài khoản
               </el-button>
             </div>
           </div>
 
-          <!-- 账号选择弹窗 -->
+          <!-- Dialog chọn tài khoản -->
           <el-dialog
             v-model="accountDialogVisible"
-            title="选择账号"
+            title="Chọn tài khoản đăng"
             width="600px"
             class="account-dialog"
           >
@@ -275,15 +275,15 @@
 
             <template #footer>
               <div class="dialog-footer">
-                <el-button @click="accountDialogVisible = false">取消</el-button>
-                <el-button type="primary" @click="confirmAccountSelection">确定</el-button>
+                <el-button @click="accountDialogVisible = false">Hủy</el-button>
+                <el-button type="primary" @click="confirmAccountSelection">Xác nhận</el-button>
               </div>
             </template>
           </el-dialog>
 
-          <!-- 平台选择 -->
+          <!-- Chọn Nền tảng -->
           <div class="platform-section">
-            <h3>平台</h3>
+            <h3>Nền tảng</h3>
             <el-radio-group v-model="tab.selectedPlatform" class="platform-radios">
               <el-radio 
                 v-for="platform in platforms" 
@@ -296,32 +296,32 @@
             </el-radio-group>
           </div>
 
-          <!-- 原创声明 -->
+          <!-- Tuyên bố nội dung gốc -->
           <div class="original-section">
             <el-checkbox
               v-model="tab.isOriginal"
-              label="声明原创"
+              label="Khai báo nội dung gốc (Original)"
               class="original-checkbox"
             />
           </div>
 
-          <!-- 草稿选项 (仅在视频号可见) -->
+          <!-- Tùy chọn bản nháp WeChat -->
           <div v-if="tab.selectedPlatform === 2" class="draft-section">
             <el-checkbox
               v-model="tab.isDraft"
-              label="视频号仅保存草稿(用手机发布)"
+              label="Chỉ lưu bản nháp trên WeChat (để duyệt/đăng trên điện thoại)"
               class="draft-checkbox"
             />
           </div>
 
-          <!-- 标签 (仅在抖音可见) -->
+          <!-- Liên kết sản phẩm (TikTok / Douyin Shop) -->
           <div v-if="tab.selectedPlatform === 3" class="product-section">
-            <h3>商品链接</h3>
+            <h3>Liên kết sản phẩm Shop</h3>
             <el-input
               v-model="tab.productTitle"
               type="text"
               :rows="1"
-              placeholder="请输入商品名称"
+              placeholder="Nhập tên sản phẩm"
               maxlength="200"
               class="product-name-input"
             />
@@ -329,29 +329,29 @@
               v-model="tab.productLink"
               type="text"
               :rows="1"
-              placeholder="请输入商品链接"
+              placeholder="Nhập liên kết / link sản phẩm"
               maxlength="200"
               class="product-link-input"
             />
           </div>
 
-          <!-- 标题输入 -->
+          <!-- Nhập Tiêu đề -->
           <div class="title-section">
-            <h3>标题</h3>
+            <h3>Tiêu đề bài đăng</h3>
             <el-input
               v-model="tab.title"
               type="textarea"
               :rows="3"
-              placeholder="请输入标题"
+              placeholder="Nhập tiêu đề và mô tả video..."
               maxlength="100"
               show-word-limit
               class="title-input"
             />
           </div>
 
-          <!-- 话题输入 -->
+          <!-- Nhập Thẻ Hashtag / Chủ đề -->
           <div class="topic-section">
-            <h3>话题</h3>
+            <h3>Chủ đề / Hashtag</h3>
             <div class="topic-display">
               <div class="selected-topics">
                 <el-tag
@@ -370,34 +370,34 @@
                 @click="openTopicDialog(tab)"
                 class="select-topic-btn"
               >
-                添加话题
+                Thêm Hashtag
               </el-button>
             </div>
           </div>
 
-          <!-- 添加话题弹窗 -->
+          <!-- Dialog thêm Hashtag -->
           <el-dialog
             v-model="topicDialogVisible"
-            title="添加话题"
+            title="Thêm Hashtag / Chủ đề"
             width="600px"
             class="topic-dialog"
           >
             <div class="topic-dialog-content">
-              <!-- 自定义话题输入 -->
+              <!-- Nhập Hashtag tùy chỉnh -->
               <div class="custom-topic-input">
                 <el-input
                   v-model="customTopic"
-                  placeholder="输入自定义话题"
+                  placeholder="Nhập hashtag tùy chỉnh..."
                   class="custom-input"
                 >
                   <template #prepend>#</template>
                 </el-input>
-                <el-button type="primary" @click="addCustomTopic">添加</el-button>
+                <el-button type="primary" @click="addCustomTopic">Thêm</el-button>
               </div>
 
-              <!-- 推荐话题 -->
+              <!-- Gợi ý Hashtag -->
               <div class="recommended-topics">
-                <h4>推荐话题</h4>
+                <h4>Gợi ý chủ đề phổ biến</h4>
                 <div class="topic-grid">
                   <el-button
                     v-for="topic in recommendedTopics"
@@ -414,25 +414,25 @@
 
             <template #footer>
               <div class="dialog-footer">
-                <el-button @click="topicDialogVisible = false">取消</el-button>
-                <el-button type="primary" @click="confirmTopicSelection">确定</el-button>
+                <el-button @click="topicDialogVisible = false">Hủy</el-button>
+                <el-button type="primary" @click="confirmTopicSelection">Xong</el-button>
               </div>
             </template>
           </el-dialog>
 
-          <!-- 定时发布 -->
+          <!-- Hẹn giờ đăng bài -->
           <div class="schedule-section">
-            <h3>定时发布</h3>
+            <h3>Hẹn giờ đăng bài</h3>
             <div class="schedule-controls">
               <el-switch
                 v-model="tab.scheduleEnabled"
-                active-text="定时发布"
-                inactive-text="立即发布"
+                active-text="Hẹn giờ đăng"
+                inactive-text="Đăng ngay"
               />
               <div v-if="tab.scheduleEnabled" class="schedule-settings">
                 <div class="schedule-item">
-                  <span class="label">每天发布视频数：</span>
-                  <el-select v-model="tab.videosPerDay" placeholder="选择发布数量">
+                  <span class="label">Số lượng video mỗi ngày:</span>
+                  <el-select v-model="tab.videosPerDay" placeholder="Chọn số lượng">
                     <el-option
                       v-for="num in 55"
                       :key="num"
@@ -442,7 +442,7 @@
                   </el-select>
                 </div>
                 <div class="schedule-item">
-                  <span class="label">每天发布时间：</span>
+                  <span class="label">Khung giờ đăng mỗi ngày:</span>
                   <el-time-select
                     v-for="(time, index) in tab.dailyTimes"
                     :key="index"
@@ -450,7 +450,7 @@
                     start="00:00"
                     step="00:30"
                     end="23:30"
-                    placeholder="选择时间"
+                    placeholder="Chọn giờ"
                   />
                   <el-button
                     v-if="tab.dailyTimes.length < tab.videosPerDay"
@@ -458,30 +458,30 @@
                     size="small"
                     @click="tab.dailyTimes.push('10:00')"
                   >
-                    添加时间
+                    Thêm khung giờ
                   </el-button>
                 </div>
                 <div class="schedule-item">
-                  <span class="label">开始天数：</span>
-                  <el-select v-model="tab.startDays" placeholder="选择开始天数">
-                    <el-option :label="'明天'" :value="0" />
-                    <el-option :label="'后天'" :value="1" />
+                  <span class="label">Bắt đầu từ:</span>
+                  <el-select v-model="tab.startDays" placeholder="Chọn ngày bắt đầu">
+                    <el-option :label="'Ngày mai'" :value="0" />
+                    <el-option :label="'Ngày kia'" :value="1" />
                   </el-select>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- 操作按钮 -->
+          <!-- Nút thao tác đăng -->
           <div class="action-buttons">
-            <el-button size="small" @click="cancelPublish(tab)">取消</el-button>
+            <el-button size="small" @click="cancelPublish(tab)">Hủy</el-button>
             <el-button
               size="small"
               type="primary"
               @click="confirmPublish(tab)"
               :loading="tab.publishing || false"
             >
-              {{ tab.publishing ? '发布中...' : '发布' }}
+              {{ tab.publishing ? 'Đang đăng bài...' : 'Đăng bài' }}
             </el-button>
           </div>
         </div>
@@ -531,19 +531,19 @@ const batchPublishType = ref('info')
 
 // 平台列表 - 对应后端type字段
 const platforms = [
-  { key: 3, name: '抖音' },
-  { key: 4, name: '快手' },
-  { key: 2, name: '视频号' },
-  { key: 1, name: '小红书' }
+  { key: 3, name: 'Douyin (抖音)' },
+  { key: 4, name: 'Kuaishou (快手)' },
+  { key: 2, name: 'WeChat Channels (视频号)' },
+  { key: 1, name: 'Xiaohongshu (小红书)' }
 ]
 
 const defaultTabInit = {
   name: 'tab1',
-  label: '发布1',
+  label: 'Bài đăng 1',
   fileList: [], // 后端返回的文件名列表
   displayFileList: [], // 用于显示的文件列表
   selectedAccounts: [], // 选中的账号ID列表
-  selectedPlatform: 1, // 选中的平台（单选）
+  selectedPlatform: 3, // 选中的平台（单选，mặc định Douyin）
   title: '',
   productLink: '', // 商品链接
   productTitle: '', // 商品名称
@@ -590,7 +590,7 @@ const availableAccounts = computed(() => {
     4: '快手'
   }
   const currentPlatform = currentTab.value ? platformMap[currentTab.value.selectedPlatform] : null
-  return currentPlatform ? accountStore.accounts.filter(acc => acc.platform === currentPlatform) : []
+  return currentPlatform ? accountStore.accounts.filter(acc => acc.platform === currentPlatform || acc.platform === platforms.find(p => p.key === currentTab.value.selectedPlatform)?.name) : []
 })
 
 // 话题相关状态
@@ -599,9 +599,9 @@ const customTopic = ref('')
 
 // 推荐话题列表
 const recommendedTopics = [
-  '游戏', '电影', '音乐', '美食', '旅行', '文化',
-  '科技', '生活', '娱乐', '体育', '教育', '艺术',
-  '健康', '时尚', '美妆', '摄影', '宠物', '汽车'
+  'Game', 'PhimẢnh', 'ÂmNhạc', 'ẨmThực', 'DuLịch', 'VănHóa',
+  'CôngNghệ', 'ĐờiSống', 'GiảiTrí', 'ThểThao', 'GiáoDục', 'NghệThuật',
+  'SứcKhỏe', 'ThờiTrang', 'LàmĐẹp', 'NhiếpẢnh', 'ThúCưng', 'XeCộ'
 ]
 
 // 添加新tab
@@ -609,7 +609,7 @@ const addTab = () => {
   tabCounter++
   const newTab = makeNewTab()
   newTab.name = `tab${tabCounter}`
-  newTab.label = `发布${tabCounter}`
+  newTab.label = `Bài đăng ${tabCounter}`
   tabs.push(newTab)
   activeTab.value = newTab.name
 }
@@ -652,15 +652,15 @@ const handleUploadSuccess = (response, file, tab) => {
       url: item.url
     }))]
     
-    ElMessage.success('文件上传成功')
+    ElMessage.success('Tải lên video thành công!')
   } else {
-    ElMessage.error(response.msg || '上传失败')
+    ElMessage.error(response.msg || 'Tải video lên thất bại')
   }
 }
 
 // 处理文件上传失败
 const handleUploadError = (error) => {
-  ElMessage.error('文件上传失败')
+  ElMessage.error('Tải video lên thất bại')
 }
 
 // 删除已上传文件
@@ -674,7 +674,7 @@ const removeFile = (tab, index) => {
     url: item.url
   }))]
   
-  ElMessage.success('文件删除成功')
+  ElMessage.success('Đã xóa tệp khỏi bài đăng')
 }
 
 // 话题相关方法
@@ -687,15 +687,15 @@ const openTopicDialog = (tab) => {
 // 添加自定义话题
 const addCustomTopic = () => {
   if (!customTopic.value.trim()) {
-    ElMessage.warning('请输入话题内容')
+    ElMessage.warning('Vui lòng nhập nội dung hashtag')
     return
   }
   if (currentTab.value && !currentTab.value.selectedTopics.includes(customTopic.value.trim())) {
     currentTab.value.selectedTopics.push(customTopic.value.trim())
     customTopic.value = ''
-    ElMessage.success('话题添加成功')
+    ElMessage.success('Thêm hashtag thành công')
   } else {
-    ElMessage.warning('话题已存在')
+    ElMessage.warning('Hashtag này đã được thêm')
   }
 }
 
@@ -721,7 +721,7 @@ const confirmTopicSelection = () => {
   topicDialogVisible.value = false
   customTopic.value = ''
   currentTab.value = null
-  ElMessage.success('添加话题完成')
+  ElMessage.success('Đã cập nhật danh sách Hashtag')
 }
 
 // 账号选择相关方法
@@ -739,7 +739,7 @@ const confirmAccountSelection = () => {
   }
   accountDialogVisible.value = false
   currentTab.value = null
-  ElMessage.success('账号选择完成')
+  ElMessage.success('Đã chọn tài khoản thành công')
 }
 
 // 删除选中的账号
@@ -755,38 +755,38 @@ const getAccountDisplayName = (accountId) => {
 
 // 取消发布
 const cancelPublish = (tab) => {
-  ElMessage.info('已取消发布')
+  ElMessage.info('Đã hủy thao tác')
 }
 
 // 确认发布
 const confirmPublish = async (tab) => {
   // 防止重复点击
   if (tab.publishing) {
-    throw new Error('正在发布中，请稍候...')
+    throw new Error('Đang trong quá trình đăng, vui lòng đợi...')
   }
 
   tab.publishing = true // 设置发布状态为进行中
 
   // 数据验证
   if (tab.fileList.length === 0) {
-    ElMessage.error('请先上传视频文件')
+    ElMessage.error('Vui lòng tải lên hoặc chọn video trước')
     tab.publishing = false
-    throw new Error('请先上传视频文件')
+    throw new Error('Vui lòng tải lên hoặc chọn video trước')
   }
   if (!tab.title.trim()) {
-    ElMessage.error('请输入标题')
+    ElMessage.error('Vui lòng nhập tiêu đề bài đăng')
     tab.publishing = false
-    throw new Error('请输入标题')
+    throw new Error('Vui lòng nhập tiêu đề bài đăng')
   }
   if (!tab.selectedPlatform) {
-    ElMessage.error('请选择发布平台')
+    ElMessage.error('Vui lòng chọn nền tảng đăng')
     tab.publishing = false
-    throw new Error('请选择发布平台')
+    throw new Error('Vui lòng chọn nền tảng đăng')
   }
   if (tab.selectedAccounts.length === 0) {
-    ElMessage.error('请选择发布账号')
+    ElMessage.error('Vui lòng chọn ít nhất một tài khoản đăng')
     tab.publishing = false
-    throw new Error('请选择发布账号')
+    throw new Error('Vui lòng chọn ít nhất một tài khoản đăng')
   }
 
   // 构造发布数据，符合后端API格式
@@ -813,7 +813,7 @@ const confirmPublish = async (tab) => {
   try {
     const data = await http.post('/postVideo', publishData)
     tab.publishStatus = {
-      message: '发布成功',
+      message: 'Đăng bài thành công!',
       type: 'success'
     }
     // 清空当前tab的数据
@@ -826,7 +826,7 @@ const confirmPublish = async (tab) => {
   } catch (error) {
     console.error('发布错误:', error)
     tab.publishStatus = {
-      message: `发布失败：${error.message || '请检查网络连接'}`,
+      message: `Đăng bài thất bại: ${error.message || 'Vui lòng kiểm tra kết nối'}`,
       type: 'error'
     }
     throw error
@@ -858,12 +858,12 @@ const selectMaterialLibrary = async () => {
       if (response.code === 200) {
         appStore.setMaterials(response.data)
       } else {
-        ElMessage.error('获取素材列表失败')
+        ElMessage.error('Lấy danh sách tư liệu thất bại')
         return
       }
     } catch (error) {
       console.error('获取素材列表出错:', error)
-      ElMessage.error('获取素材列表失败')
+      ElMessage.error('Lấy danh sách tư liệu thất bại')
       return
     }
   }
@@ -875,7 +875,7 @@ const selectMaterialLibrary = async () => {
 // 确认素材选择
 const confirmMaterialSelection = () => {
   if (selectedMaterials.value.length === 0) {
-    ElMessage.warning('请选择至少一个素材')
+    ElMessage.warning('Vui lòng chọn ít nhất một tư liệu')
     return
   }
   
@@ -911,7 +911,7 @@ const confirmMaterialSelection = () => {
   materialLibraryVisible.value = false
   selectedMaterials.value = []
   currentUploadTab.value = null
-  ElMessage.success(`已添加 ${addedCount} 个素材`)
+  ElMessage.success(`Đã thêm ${addedCount} tư liệu vào bài đăng`)
 }
 
 // 批量发布对话框状态
@@ -924,7 +924,7 @@ const isCancelled = ref(false)
 // 取消批量发布
 const cancelBatchPublish = () => {
   isCancelled.value = true
-  ElMessage.info('正在取消发布...')
+  ElMessage.info('Đang hủy quá trình đăng...')
 }
 
 // 批量发布方法
@@ -944,7 +944,7 @@ const batchPublish = async () => {
         publishResults.value.push({
           label: tabs[i].label,
           status: 'cancelled',
-          message: '已取消'
+          message: 'Đã hủy'
         })
         continue
       }
@@ -958,7 +958,7 @@ const batchPublish = async () => {
         publishResults.value.push({
           label: tab.label,
           status: 'success',
-          message: '发布成功'
+          message: 'Đăng thành công'
         })
       } catch (error) {
         publishResults.value.push({
@@ -978,11 +978,11 @@ const batchPublish = async () => {
     const cancelCount = publishResults.value.filter(r => r.status === 'cancelled').length
     
     if (isCancelled.value) {
-      ElMessage.warning(`发布已取消：${successCount}个成功，${failCount}个失败，${cancelCount}个未执行`)
+      ElMessage.warning(`Đã dừng đăng: ${successCount} thành công, ${failCount} thất bại, ${cancelCount} chưa thực hiện`)
     } else if (failCount > 0) {
-      ElMessage.error(`发布完成：${successCount}个成功，${failCount}个失败`)
+      ElMessage.error(`Hoàn tất đăng: ${successCount} thành công, ${failCount} thất bại`)
     } else {
-      ElMessage.success('所有Tab发布成功')
+      ElMessage.success('Tất cả các bài đăng đã hoàn tất thành công!')
       setTimeout(() => {
         batchPublishDialogVisible.value = false
       }, 1000)
@@ -990,7 +990,7 @@ const batchPublish = async () => {
     
   } catch (error) {
     console.error('批量发布出错:', error)
-    ElMessage.error('批量发布出错，请重试')
+    ElMessage.error('Đăng hàng loạt xảy ra lỗi, vui lòng thử lại')
   } finally {
     batchPublishing.value = false
     isCancelled.value = false

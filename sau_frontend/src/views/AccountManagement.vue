@@ -1,50 +1,50 @@
 <template>
   <div class="account-management">
     <div class="page-header">
-      <h1>账号管理</h1>
+      <h1>Quản lý tài khoản</h1>
     </div>
     
     <div class="account-tabs">
       <el-tabs v-model="activeTab" class="account-tabs-nav">
-        <el-tab-pane label="全部" name="all">
+        <el-tab-pane label="Tất cả" name="all">
           <div class="account-list-container">
             <div class="account-search">
               <el-input
                 v-model="searchKeyword"
-                placeholder="输入名称或账号搜索"
+                placeholder="Nhập tên hoặc tài khoản để tìm kiếm"
                 prefix-icon="Search"
                 clearable
                 @clear="handleSearch"
                 @input="handleSearch"
               />
               <div class="action-buttons">
-                <el-button type="primary" @click="handleAddAccount">添加账号</el-button>
+                <el-button type="primary" @click="handleAddAccount">Thêm tài khoản</el-button>
                 <el-button type="info" @click="fetchAccounts" :loading="false">
                   <el-icon :class="{ 'is-loading': appStore.isAccountRefreshing }"><Refresh /></el-icon>
-                  <span v-if="appStore.isAccountRefreshing">刷新中</span>
+                  <span v-if="appStore.isAccountRefreshing">Đang làm mới</span>
                 </el-button>
               </div>
             </div>
             
             <div v-if="filteredAccounts.length > 0" class="account-list">
               <el-table :data="filteredAccounts" style="width: 100%">
-                <el-table-column label="头像" width="80">
+                <el-table-column label="Avatar" width="80">
                   <template #default="scope">
                     <el-avatar :src="getDefaultAvatar(scope.row.name)" :size="40" />
                   </template>
                 </el-table-column>
-                <el-table-column prop="name" label="名称" width="180" />
-                <el-table-column prop="platform" label="平台">
+                <el-table-column prop="name" label="Tên tài khoản" width="180" />
+                <el-table-column prop="platform" label="Nền tảng">
                   <template #default="scope">
                     <el-tag
                       :type="getPlatformTagType(scope.row.platform)"
                       effect="plain"
                     >
-                      {{ scope.row.platform }}
+                      {{ getPlatformDisplayName(scope.row.platform) }}
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column prop="status" label="状态">
+                <el-table-column prop="status" label="Trạng thái">
                   <template #default="scope">
                     <el-tag
                       :type="getStatusTagType(scope.row.status)"
@@ -52,69 +52,69 @@
                       :class="{'clickable-status': isStatusClickable(scope.row.status)}"
                       @click="handleStatusClick(scope.row)"
                     >
-                      <el-icon :class="scope.row.status === '验证中' ? 'is-loading' : ''" v-if="scope.row.status === '验证中'">
+                      <el-icon :class="(scope.row.status === '验证中' || scope.row.status === 'Đang xác thực') ? 'is-loading' : ''" v-if="scope.row.status === '验证中' || scope.row.status === 'Đang xác thực'">
                         <Loading />
                       </el-icon>
-                      {{ scope.row.status }}
+                      {{ getStatusDisplayName(scope.row.status) }}
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作">
+                <el-table-column label="Thao tác">
                   <template #default="scope">
-                    <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
-                    <el-button size="small" type="primary" :icon="Download" @click="handleDownloadCookie(scope.row)">下载Cookie</el-button>
-                    <el-button size="small" type="info" :icon="Upload" @click="handleUploadCookie(scope.row)">上传Cookie</el-button>
-                    <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+                    <el-button size="small" @click="handleEdit(scope.row)">Sửa</el-button>
+                    <el-button size="small" type="primary" :icon="Download" @click="handleDownloadCookie(scope.row)">Tải Cookie</el-button>
+                    <el-button size="small" type="info" :icon="Upload" @click="handleUploadCookie(scope.row)">Nhập Cookie</el-button>
+                    <el-button size="small" type="danger" @click="handleDelete(scope.row)">Xóa</el-button>
                   </template>
                 </el-table-column>
               </el-table>
             </div>
             
             <div v-else class="empty-data">
-              <el-empty description="暂无账号数据" />
+              <el-empty description="Chưa có dữ liệu tài khoản" />
             </div>
           </div>
         </el-tab-pane>
         
-        <el-tab-pane label="快手" name="kuaishou">
+        <el-tab-pane label="Kuaishou" name="kuaishou">
           <div class="account-list-container">
             <div class="account-search">
               <el-input
                 v-model="searchKeyword"
-                placeholder="输入名称或账号搜索"
+                placeholder="Nhập tên hoặc tài khoản để tìm kiếm"
                 prefix-icon="Search"
                 clearable
                 @clear="handleSearch"
                 @input="handleSearch"
               />
               <div class="action-buttons">
-                <el-button type="primary" @click="handleAddAccount">添加账号</el-button>
+                <el-button type="primary" @click="handleAddAccount">Thêm tài khoản</el-button>
                 <el-button type="info" @click="fetchAccounts" :loading="false">
                   <el-icon :class="{ 'is-loading': appStore.isAccountRefreshing }"><Refresh /></el-icon>
-                  <span v-if="appStore.isAccountRefreshing">刷新中</span>
+                  <span v-if="appStore.isAccountRefreshing">Đang làm mới</span>
                 </el-button>
               </div>
             </div>
             
             <div v-if="filteredKuaishouAccounts.length > 0" class="account-list">
               <el-table :data="filteredKuaishouAccounts" style="width: 100%">
-                <el-table-column label="头像" width="80">
+                <el-table-column label="Avatar" width="80">
                   <template #default="scope">
                     <el-avatar :src="getDefaultAvatar(scope.row.name)" :size="40" />
                   </template>
                 </el-table-column>
-                <el-table-column prop="name" label="名称" width="180" />
-                <el-table-column prop="platform" label="平台">
+                <el-table-column prop="name" label="Tên tài khoản" width="180" />
+                <el-table-column prop="platform" label="Nền tảng">
                   <template #default="scope">
                     <el-tag
                       :type="getPlatformTagType(scope.row.platform)"
                       effect="plain"
                     >
-                      {{ scope.row.platform }}
+                      {{ getPlatformDisplayName(scope.row.platform) }}
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column prop="status" label="状态">
+                <el-table-column prop="status" label="Trạng thái">
                   <template #default="scope">
                     <el-tag
                       :type="getStatusTagType(scope.row.status)"
@@ -122,69 +122,69 @@
                       :class="{'clickable-status': isStatusClickable(scope.row.status)}"
                       @click="handleStatusClick(scope.row)"
                     >
-                      <el-icon :class="scope.row.status === '验证中' ? 'is-loading' : ''" v-if="scope.row.status === '验证中'">
+                      <el-icon :class="(scope.row.status === '验证中' || scope.row.status === 'Đang xác thực') ? 'is-loading' : ''" v-if="scope.row.status === '验证中' || scope.row.status === 'Đang xác thực'">
                         <Loading />
                       </el-icon>
-                      {{ scope.row.status }}
+                      {{ getStatusDisplayName(scope.row.status) }}
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作">
+                <el-table-column label="Thao tác">
                   <template #default="scope">
-                    <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
-                    <el-button size="small" type="primary" :icon="Download" @click="handleDownloadCookie(scope.row)">下载Cookie</el-button>
-                    <el-button size="small" type="info" :icon="Upload" @click="handleUploadCookie(scope.row)">上传Cookie</el-button>
-                    <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+                    <el-button size="small" @click="handleEdit(scope.row)">Sửa</el-button>
+                    <el-button size="small" type="primary" :icon="Download" @click="handleDownloadCookie(scope.row)">Tải Cookie</el-button>
+                    <el-button size="small" type="info" :icon="Upload" @click="handleUploadCookie(scope.row)">Nhập Cookie</el-button>
+                    <el-button size="small" type="danger" @click="handleDelete(scope.row)">Xóa</el-button>
                   </template>
                 </el-table-column>
               </el-table>
             </div>
             
             <div v-else class="empty-data">
-              <el-empty description="暂无快手账号数据" />
+              <el-empty description="Chưa có dữ liệu tài khoản Kuaishou" />
             </div>
           </div>
         </el-tab-pane>
         
-        <el-tab-pane label="抖音" name="douyin">
+        <el-tab-pane label="Douyin" name="douyin">
           <div class="account-list-container">
             <div class="account-search">
               <el-input
                 v-model="searchKeyword"
-                placeholder="输入名称或账号搜索"
+                placeholder="Nhập tên hoặc tài khoản để tìm kiếm"
                 prefix-icon="Search"
                 clearable
                 @clear="handleSearch"
                 @input="handleSearch"
               />
               <div class="action-buttons">
-                <el-button type="primary" @click="handleAddAccount">添加账号</el-button>
+                <el-button type="primary" @click="handleAddAccount">Thêm tài khoản</el-button>
                 <el-button type="info" @click="fetchAccounts" :loading="false">
                   <el-icon :class="{ 'is-loading': appStore.isAccountRefreshing }"><Refresh /></el-icon>
-                  <span v-if="appStore.isAccountRefreshing">刷新中</span>
+                  <span v-if="appStore.isAccountRefreshing">Đang làm mới</span>
                 </el-button>
               </div>
             </div>
             
             <div v-if="filteredDouyinAccounts.length > 0" class="account-list">
               <el-table :data="filteredDouyinAccounts" style="width: 100%">
-                <el-table-column label="头像" width="80">
+                <el-table-column label="Avatar" width="80">
                   <template #default="scope">
                     <el-avatar :src="getDefaultAvatar(scope.row.name)" :size="40" />
                   </template>
                 </el-table-column>
-                <el-table-column prop="name" label="名称" width="180" />
-                <el-table-column prop="platform" label="平台">
+                <el-table-column prop="name" label="Tên tài khoản" width="180" />
+                <el-table-column prop="platform" label="Nền tảng">
                   <template #default="scope">
                     <el-tag
                       :type="getPlatformTagType(scope.row.platform)"
                       effect="plain"
                     >
-                      {{ scope.row.platform }}
+                      {{ getPlatformDisplayName(scope.row.platform) }}
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column prop="status" label="状态">
+                <el-table-column prop="status" label="Trạng thái">
                   <template #default="scope">
                     <el-tag
                       :type="getStatusTagType(scope.row.status)"
@@ -192,69 +192,69 @@
                       :class="{'clickable-status': isStatusClickable(scope.row.status)}"
                       @click="handleStatusClick(scope.row)"
                     >
-                      <el-icon :class="scope.row.status === '验证中' ? 'is-loading' : ''" v-if="scope.row.status === '验证中'">
+                      <el-icon :class="(scope.row.status === '验证中' || scope.row.status === 'Đang xác thực') ? 'is-loading' : ''" v-if="scope.row.status === '验证中' || scope.row.status === 'Đang xác thực'">
                         <Loading />
                       </el-icon>
-                      {{ scope.row.status }}
+                      {{ getStatusDisplayName(scope.row.status) }}
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作">
+                <el-table-column label="Thao tác">
                   <template #default="scope">
-                    <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
-                    <el-button size="small" type="primary" :icon="Download" @click="handleDownloadCookie(scope.row)">下载Cookie</el-button>
-                    <el-button size="small" type="info" :icon="Upload" @click="handleUploadCookie(scope.row)">上传Cookie</el-button>
-                    <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+                    <el-button size="small" @click="handleEdit(scope.row)">Sửa</el-button>
+                    <el-button size="small" type="primary" :icon="Download" @click="handleDownloadCookie(scope.row)">Tải Cookie</el-button>
+                    <el-button size="small" type="info" :icon="Upload" @click="handleUploadCookie(scope.row)">Nhập Cookie</el-button>
+                    <el-button size="small" type="danger" @click="handleDelete(scope.row)">Xóa</el-button>
                   </template>
                 </el-table-column>
               </el-table>
             </div>
             
             <div v-else class="empty-data">
-              <el-empty description="暂无抖音账号数据" />
+              <el-empty description="Chưa có dữ liệu tài khoản Douyin" />
             </div>
           </div>
         </el-tab-pane>
         
-        <el-tab-pane label="视频号" name="channels">
+        <el-tab-pane label="WeChat Channels" name="channels">
           <div class="account-list-container">
             <div class="account-search">
               <el-input
                 v-model="searchKeyword"
-                placeholder="输入名称或账号搜索"
+                placeholder="Nhập tên hoặc tài khoản để tìm kiếm"
                 prefix-icon="Search"
                 clearable
                 @clear="handleSearch"
                 @input="handleSearch"
               />
               <div class="action-buttons">
-                <el-button type="primary" @click="handleAddAccount">添加账号</el-button>
+                <el-button type="primary" @click="handleAddAccount">Thêm tài khoản</el-button>
                 <el-button type="info" @click="fetchAccounts" :loading="false">
                   <el-icon :class="{ 'is-loading': appStore.isAccountRefreshing }"><Refresh /></el-icon>
-                  <span v-if="appStore.isAccountRefreshing">刷新中</span>
+                  <span v-if="appStore.isAccountRefreshing">Đang làm mới</span>
                 </el-button>
               </div>
             </div>
             
             <div v-if="filteredChannelsAccounts.length > 0" class="account-list">
               <el-table :data="filteredChannelsAccounts" style="width: 100%">
-                <el-table-column label="头像" width="80">
+                <el-table-column label="Avatar" width="80">
                   <template #default="scope">
                     <el-avatar :src="getDefaultAvatar(scope.row.name)" :size="40" />
                   </template>
                 </el-table-column>
-                <el-table-column prop="name" label="名称" width="180" />
-                <el-table-column prop="platform" label="平台">
+                <el-table-column prop="name" label="Tên tài khoản" width="180" />
+                <el-table-column prop="platform" label="Nền tảng">
                   <template #default="scope">
                     <el-tag
                       :type="getPlatformTagType(scope.row.platform)"
                       effect="plain"
                     >
-                      {{ scope.row.platform }}
+                      {{ getPlatformDisplayName(scope.row.platform) }}
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column prop="status" label="状态">
+                <el-table-column prop="status" label="Trạng thái">
                   <template #default="scope">
                     <el-tag
                       :type="getStatusTagType(scope.row.status)"
@@ -262,69 +262,69 @@
                       :class="{'clickable-status': isStatusClickable(scope.row.status)}"
                       @click="handleStatusClick(scope.row)"
                     >
-                      <el-icon :class="scope.row.status === '验证中' ? 'is-loading' : ''" v-if="scope.row.status === '验证中'">
+                      <el-icon :class="(scope.row.status === '验证中' || scope.row.status === 'Đang xác thực') ? 'is-loading' : ''" v-if="scope.row.status === '验证中' || scope.row.status === 'Đang xác thực'">
                         <Loading />
                       </el-icon>
-                      {{ scope.row.status }}
+                      {{ getStatusDisplayName(scope.row.status) }}
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作">
+                <el-table-column label="Thao tác">
                   <template #default="scope">
-                    <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
-                    <el-button size="small" type="primary" :icon="Download" @click="handleDownloadCookie(scope.row)">下载Cookie</el-button>
-                    <el-button size="small" type="info" :icon="Upload" @click="handleUploadCookie(scope.row)">上传Cookie</el-button>
-                    <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+                    <el-button size="small" @click="handleEdit(scope.row)">Sửa</el-button>
+                    <el-button size="small" type="primary" :icon="Download" @click="handleDownloadCookie(scope.row)">Tải Cookie</el-button>
+                    <el-button size="small" type="info" :icon="Upload" @click="handleUploadCookie(scope.row)">Nhập Cookie</el-button>
+                    <el-button size="small" type="danger" @click="handleDelete(scope.row)">Xóa</el-button>
                   </template>
                 </el-table-column>
               </el-table>
             </div>
             
             <div v-else class="empty-data">
-              <el-empty description="暂无视频号账号数据" />
+              <el-empty description="Chưa có dữ liệu tài khoản WeChat Channels" />
             </div>
           </div>
         </el-tab-pane>
         
-        <el-tab-pane label="小红书" name="xiaohongshu">
+        <el-tab-pane label="Xiaohongshu" name="xiaohongshu">
           <div class="account-list-container">
             <div class="account-search">
               <el-input
                 v-model="searchKeyword"
-                placeholder="输入名称或账号搜索"
+                placeholder="Nhập tên hoặc tài khoản để tìm kiếm"
                 prefix-icon="Search"
                 clearable
                 @clear="handleSearch"
                 @input="handleSearch"
               />
               <div class="action-buttons">
-                <el-button type="primary" @click="handleAddAccount">添加账号</el-button>
+                <el-button type="primary" @click="handleAddAccount">Thêm tài khoản</el-button>
                 <el-button type="info" @click="fetchAccounts" :loading="false">
                   <el-icon :class="{ 'is-loading': appStore.isAccountRefreshing }"><Refresh /></el-icon>
-                  <span v-if="appStore.isAccountRefreshing">刷新中</span>
+                  <span v-if="appStore.isAccountRefreshing">Đang làm mới</span>
                 </el-button>
               </div>
             </div>
             
             <div v-if="filteredXiaohongshuAccounts.length > 0" class="account-list">
               <el-table :data="filteredXiaohongshuAccounts" style="width: 100%">
-                <el-table-column label="头像" width="80">
+                <el-table-column label="Avatar" width="80">
                   <template #default="scope">
                     <el-avatar :src="getDefaultAvatar(scope.row.name)" :size="40" />
                   </template>
                 </el-table-column>
-                <el-table-column prop="name" label="名称" width="180" />
-                <el-table-column prop="platform" label="平台">
+                <el-table-column prop="name" label="Tên tài khoản" width="180" />
+                <el-table-column prop="platform" label="Nền tảng">
                   <template #default="scope">
                     <el-tag
                       :type="getPlatformTagType(scope.row.platform)"
                       effect="plain"
                     >
-                      {{ scope.row.platform }}
+                      {{ getPlatformDisplayName(scope.row.platform) }}
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column prop="status" label="状态">
+                <el-table-column prop="status" label="Trạng thái">
                   <template #default="scope">
                     <el-tag
                       :type="getStatusTagType(scope.row.status)"
@@ -332,93 +332,93 @@
                       :class="{'clickable-status': isStatusClickable(scope.row.status)}"
                       @click="handleStatusClick(scope.row)"
                     >
-                      <el-icon :class="scope.row.status === '验证中' ? 'is-loading' : ''" v-if="scope.row.status === '验证中'">
+                      <el-icon :class="(scope.row.status === '验证中' || scope.row.status === 'Đang xác thực') ? 'is-loading' : ''" v-if="scope.row.status === '验证中' || scope.row.status === 'Đang xác thực'">
                         <Loading />
                       </el-icon>
-                      {{ scope.row.status }}
+                      {{ getStatusDisplayName(scope.row.status) }}
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作">
+                <el-table-column label="Thao tác">
                   <template #default="scope">
-                    <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
-                    <el-button size="small" type="primary" :icon="Download" @click="handleDownloadCookie(scope.row)">下载Cookie</el-button>
-                    <el-button size="small" type="info" :icon="Upload" @click="handleUploadCookie(scope.row)">上传Cookie</el-button>
-                    <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+                    <el-button size="small" @click="handleEdit(scope.row)">Sửa</el-button>
+                    <el-button size="small" type="primary" :icon="Download" @click="handleDownloadCookie(scope.row)">Tải Cookie</el-button>
+                    <el-button size="small" type="info" :icon="Upload" @click="handleUploadCookie(scope.row)">Nhập Cookie</el-button>
+                    <el-button size="small" type="danger" @click="handleDelete(scope.row)">Xóa</el-button>
                   </template>
                 </el-table-column>
               </el-table>
             </div>
             
             <div v-else class="empty-data">
-              <el-empty description="暂无小红书账号数据" />
+              <el-empty description="Chưa có dữ liệu tài khoản Xiaohongshu" />
             </div>
           </div>
         </el-tab-pane>
       </el-tabs>
     </div>
     
-    <!-- 添加/编辑账号对话框 -->
+    <!-- Hộp thoại Thêm/Sửa tài khoản -->
     <el-dialog
       v-model="dialogVisible"
-      :title="dialogType === 'add' ? '添加账号' : '编辑账号'"
+      :title="dialogType === 'add' ? 'Thêm tài khoản' : 'Chỉnh sửa tài khoản'"
       width="500px"
       :close-on-click-modal="false"
       :close-on-press-escape="!sseConnecting"
       :show-close="!sseConnecting"
     >
-      <el-form :model="accountForm" label-width="80px" :rules="rules" ref="accountFormRef">
-        <el-form-item label="平台" prop="platform">
+      <el-form :model="accountForm" label-width="110px" :rules="rules" ref="accountFormRef">
+        <el-form-item label="Nền tảng" prop="platform">
           <el-select 
             v-model="accountForm.platform" 
-            placeholder="请选择平台" 
+            placeholder="Chọn nền tảng" 
             style="width: 100%"
             :disabled="dialogType === 'edit' || sseConnecting"
           >
-            <el-option label="快手" value="快手" />
-            <el-option label="抖音" value="抖音" />
-            <el-option label="视频号" value="视频号" />
-            <el-option label="小红书" value="小红书" />
+            <el-option label="Kuaishou (快手)" value="快手" />
+            <el-option label="Douyin (抖音)" value="抖音" />
+            <el-option label="WeChat Channels (视频号)" value="视频号" />
+            <el-option label="Xiaohongshu (小红书)" value="小红书" />
           </el-select>
         </el-form-item>
-        <el-form-item label="名称" prop="name">
+        <el-form-item label="Tên tài khoản" prop="name">
           <el-input 
             v-model="accountForm.name" 
-            placeholder="请输入账号名称" 
+            placeholder="Nhập tên định danh tài khoản" 
             :disabled="sseConnecting"
           />
         </el-form-item>
         
-        <!-- 二维码显示区域 -->
+        <!-- Vùng hiển thị mã QR -->
         <div v-if="sseConnecting" class="qrcode-container">
           <div v-if="qrCodeData && !loginStatus" class="qrcode-wrapper">
-            <p class="qrcode-tip">请使用对应平台APP扫描二维码登录</p>
-            <img :src="qrCodeData" alt="登录二维码" class="qrcode-image" />
+            <p class="qrcode-tip">Dùng App trên điện thoại quét mã QR để đăng nhập</p>
+            <img :src="qrCodeData" alt="Mã QR đăng nhập" class="qrcode-image" />
           </div>
           <div v-else-if="!qrCodeData && !loginStatus" class="loading-wrapper">
             <el-icon class="is-loading"><Refresh /></el-icon>
-            <span>请求中...</span>
+            <span>Đang yêu cầu kết nối...</span>
           </div>
           <div v-else-if="loginStatus === '200'" class="success-wrapper">
             <el-icon><CircleCheckFilled /></el-icon>
-            <span>添加成功</span>
+            <span>Thêm tài khoản thành công!</span>
           </div>
           <div v-else-if="loginStatus === '500'" class="error-wrapper">
             <el-icon><CircleCloseFilled /></el-icon>
-            <span>添加失败，请稍后再试</span>
+            <span>Thêm thất bại, vui lòng thử lại</span>
           </div>
         </div>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button @click="dialogVisible = false">Hủy</el-button>
           <el-button 
             type="primary" 
             @click="submitAccountForm" 
             :loading="sseConnecting" 
             :disabled="sseConnecting"
           >
-            {{ sseConnecting ? '请求中' : '确认' }}
+            {{ sseConnecting ? 'Đang xử lý...' : 'Xác nhận' }}
           </el-button>
         </span>
       </template>
@@ -516,6 +516,27 @@ onMounted(() => {
   }, 100) // 稍微延迟一下，让用户看到快速加载的效果
 })
 
+// 获取平台显示名称
+const getPlatformDisplayName = (platform) => {
+  const map = {
+    '快手': 'Kuaishou',
+    '抖音': 'Douyin',
+    '视频号': 'WeChat Channels',
+    '小红书': 'Xiaohongshu'
+  }
+  return map[platform] || platform
+}
+
+// 获取状态显示名称
+const getStatusDisplayName = (status) => {
+  const map = {
+    '正常': 'Hoạt động',
+    '异常': 'Lỗi / Cần đăng nhập lại',
+    '验证中': 'Đang xác thực'
+  }
+  return map[status] || status
+}
+
 // 获取平台标签类型
 const getPlatformTagType = (platform) => {
   const typeMap = {
@@ -529,17 +550,17 @@ const getPlatformTagType = (platform) => {
 
 // 判断状态是否可点击（异常状态可点击）
 const isStatusClickable = (status) => {
-  return status === '异常'; // 只有异常状态可点击，验证中不可点击
+  return status === '异常' || status === 'Lỗi / Cần đăng nhập lại';
 }
 
 // 获取状态标签类型
 const getStatusTagType = (status) => {
-  if (status === '验证中') {
-    return 'info'; // 验证中使用灰色
-  } else if (status === '正常') {
-    return 'success'; // 正常使用绿色
+  if (status === '验证中' || status === 'Đang xác thực') {
+    return 'info';
+  } else if (status === '正常' || status === 'Hoạt động') {
+    return 'success';
   } else {
-    return 'danger'; // 无效使用红色
+    return 'danger';
   }
 }
 
@@ -555,25 +576,25 @@ const handleStatusClick = (row) => {
 const filteredAccounts = computed(() => {
   if (!searchKeyword.value) return accountStore.accounts
   return accountStore.accounts.filter(account =>
-    account.name.includes(searchKeyword.value)
+    account.name.toLowerCase().includes(searchKeyword.value.toLowerCase())
   )
 })
 
 // 按平台过滤的账号列表
 const filteredKuaishouAccounts = computed(() => {
-  return filteredAccounts.value.filter(account => account.platform === '快手')
+  return filteredAccounts.value.filter(account => account.platform === '快手' || account.platform === 'Kuaishou')
 })
 
 const filteredDouyinAccounts = computed(() => {
-  return filteredAccounts.value.filter(account => account.platform === '抖音')
+  return filteredAccounts.value.filter(account => account.platform === '抖音' || account.platform === 'Douyin')
 })
 
 const filteredChannelsAccounts = computed(() => {
-  return filteredAccounts.value.filter(account => account.platform === '视频号')
+  return filteredAccounts.value.filter(account => account.platform === '视频号' || account.platform === 'WeChat Channels')
 })
 
 const filteredXiaohongshuAccounts = computed(() => {
-  return filteredAccounts.value.filter(account => account.platform === '小红书')
+  return filteredAccounts.value.filter(account => account.platform === '小红书' || account.platform === 'Xiaohongshu')
 })
 
 // 搜索处理
@@ -596,8 +617,8 @@ const accountForm = reactive({
 
 // 表单验证规则
 const rules = {
-  platform: [{ required: true, message: '请选择平台', trigger: 'change' }],
-  name: [{ required: true, message: '请输入账号名称', trigger: 'blur' }]
+  platform: [{ required: true, message: 'Vui lòng chọn nền tảng', trigger: 'change' }],
+  name: [{ required: true, message: 'Vui lòng nhập tên tài khoản', trigger: 'blur' }]
 }
 
 // SSE连接状态
@@ -636,11 +657,11 @@ const handleEdit = (row) => {
 // 删除账号
 const handleDelete = (row) => {
   ElMessageBox.confirm(
-    `确定要删除账号 ${row.name} 吗？`,
-    '警告',
+    `Bạn có chắc chắn muốn xóa tài khoản "${row.name}" không?`,
+    'Cảnh báo',
     {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+      confirmButtonText: 'Xác nhận xóa',
+      cancelButtonText: 'Hủy',
       type: 'warning',
     }
   )
@@ -654,14 +675,14 @@ const handleDelete = (row) => {
           accountStore.deleteAccount(row.id)
           ElMessage({
             type: 'success',
-            message: '删除成功',
+            message: 'Đã xóa tài khoản thành công',
           })
         } else {
-          ElMessage.error(response.msg || '删除失败')
+          ElMessage.error(response.msg || 'Xóa tài khoản thất bại')
         }
       } catch (error) {
         console.error('删除账号失败:', error)
-        ElMessage.error('删除账号失败')
+        ElMessage.error('Xóa tài khoản thất bại')
       }
     })
     .catch(() => {
@@ -701,7 +722,7 @@ const handleUploadCookie = (row) => {
 
     // 检查文件类型
     if (!file.name.endsWith('.json')) {
-      ElMessage.error('请选择JSON格式的Cookie文件')
+      ElMessage.error('Vui lòng chọn tệp Cookie định dạng JSON (.json)')
       document.body.removeChild(input)
       return
     }
@@ -716,11 +737,11 @@ const handleUploadCookie = (row) => {
       // 使用统一的http封装发送上传请求
       const result = await http.upload('/uploadCookie', formData)
 
-      ElMessage.success('Cookie文件上传成功')
+      ElMessage.success('Tải lên tệp Cookie thành công!')
       // 刷新账号列表以显示更新
       fetchAccounts()
     } catch (error) {
-      ElMessage.error('Cookie文件上传失败')
+      ElMessage.error('Tải lên tệp Cookie thất bại')
     } finally {
       document.body.removeChild(input)
     }

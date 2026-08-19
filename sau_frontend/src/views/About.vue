@@ -2,49 +2,52 @@
   <div class="about">
     <el-card class="about-card">
       <div class="about-header">
-        <h1>自媒体自动化运营系统</h1>
-        <p class="version">social-auto-upload</p>
+        <h1>Hệ thống Tự động hóa Mạng xã hội</h1>
+        <p class="version">social-auto-upload (Phiên bản tiếng Việt)</p>
       </div>
 
       <el-divider />
 
       <div class="about-section">
-        <h3>系统简介</h3>
+        <h3>Giới thiệu hệ thống</h3>
         <p>
-          本系统是一款强大的自动化工具，帮助内容创作者和运营人员一键将视频内容高效发布到多个国内外主流社交媒体平台。
-          支持视频上传、定时发布等功能。
+          Hệ thống là công cụ tự động hóa mạnh mẽ giúp các nhà sáng tạo nội dung và nhà phát triển phân phối video/ảnh đồng thời lên nhiều nền tảng mạng xã hội lớn trong nước và quốc tế chỉ với 1 cú nhấp chuột.
+          Hỗ trợ đăng video, đăng bài viết hình ảnh, quản lý đa tài khoản và hẹn giờ đăng thông minh.
         </p>
       </div>
 
       <div class="about-section">
-        <h3>支持平台</h3>
+        <h3>Các nền tảng hỗ trợ</h3>
         <div class="platform-tags">
-          <el-tag type="danger">抖音</el-tag>
-          <el-tag type="success">快手</el-tag>
-          <el-tag type="warning">视频号</el-tag>
-          <el-tag type="info">小红书</el-tag>
+          <el-tag type="danger">Douyin (TikTok Trung Quốc)</el-tag>
+          <el-tag type="success">Kuaishou</el-tag>
+          <el-tag type="warning">WeChat Channels (Kênh Video)</el-tag>
+          <el-tag type="info">Xiaohongshu (Tiểu Hồng Thư)</el-tag>
+          <el-tag type="primary">YouTube Studio</el-tag>
+          <el-tag type="danger">Bilibili</el-tag>
+          <el-tag type="success">TikTok Quốc tế</el-tag>
         </div>
       </div>
 
       <div class="about-section">
-        <h3>核心功能</h3>
+        <h3>Tính năng nổi bật</h3>
         <ul class="feature-list">
-          <li>多平台账号管理与登录状态维护</li>
-          <li>视频素材上传与管理</li>
-          <li>一键多平台发布</li>
-          <li>定时发布与批量发布</li>
-          <li>Cookie 导入导出</li>
+          <li>Quản lý nhiều tài khoản & duy trì trạng thái đăng nhập, Cookie</li>
+          <li>Tải lên, lưu trữ và xem trước thư viện tư liệu video/ảnh</li>
+          <li>Đăng bài đa nền tảng một chạm</li>
+          <li>Hẹn giờ đăng bài tự động và đăng hàng loạt theo lịch trình</li>
+          <li>Nhập / Xuất dữ liệu Cookie tiện lợi</li>
         </ul>
       </div>
 
       <div class="about-section">
-        <h3>技术栈</h3>
+        <h3>Công nghệ sử dụng</h3>
         <div class="tech-tags">
           <el-tag effect="plain">Vue 3</el-tag>
-          <el-tag effect="plain">Element Plus</el-tag>
+          <el-tag effect="plain">Element Plus (Vi)</el-tag>
           <el-tag effect="plain">Pinia</el-tag>
-          <el-tag effect="plain">Flask</el-tag>
-          <el-tag effect="plain">Playwright</el-tag>
+          <el-tag effect="plain">Flask Async</el-tag>
+          <el-tag effect="plain">Patchright / Playwright</el-tag>
           <el-tag effect="plain">SQLite</el-tag>
         </div>
       </div>

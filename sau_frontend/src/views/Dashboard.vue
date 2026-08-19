@@ -1,12 +1,12 @@
 <template>
   <div class="dashboard">
     <div class="page-header">
-      <h1>自媒体自动化运营系统</h1>
+      <h1>Tổng quan hệ thống tự động hóa</h1>
     </div>
 
     <div class="dashboard-content">
       <el-row :gutter="20">
-        <!-- 账号统计卡片 -->
+        <!-- Thống kê tài khoản -->
         <el-col :span="8">
           <el-card class="stat-card">
             <div class="stat-card-content">
@@ -15,19 +15,19 @@
               </div>
               <div class="stat-info">
                 <div class="stat-value">{{ accountStats.total }}</div>
-                <div class="stat-label">账号总数</div>
+                <div class="stat-label">Tổng số tài khoản</div>
               </div>
             </div>
             <div class="stat-footer">
               <div class="stat-detail">
-                <span>正常: {{ accountStats.normal }}</span>
-                <span>异常: {{ accountStats.abnormal }}</span>
+                <span>Hoạt động: {{ accountStats.normal }}</span>
+                <span>Lỗi/Cần đăng nhập: {{ accountStats.abnormal }}</span>
               </div>
             </div>
           </el-card>
         </el-col>
 
-        <!-- 平台统计卡片 -->
+        <!-- Thống kê nền tảng -->
         <el-col :span="8">
           <el-card class="stat-card">
             <div class="stat-card-content">
@@ -36,29 +36,29 @@
               </div>
               <div class="stat-info">
                 <div class="stat-value">{{ platformStats.total }}</div>
-                <div class="stat-label">已接入平台</div>
+                <div class="stat-label">Nền tảng đã kết nối</div>
               </div>
             </div>
             <div class="stat-footer">
               <div class="stat-detail">
-                <el-tooltip content="快手账号" placement="top">
-                  <el-tag size="small" type="success">{{ platformStats.kuaishou }}</el-tag>
+                <el-tooltip content="Tài khoản Kuaishou" placement="top">
+                  <el-tag size="small" type="success">Kuaishou: {{ platformStats.kuaishou }}</el-tag>
                 </el-tooltip>
-                <el-tooltip content="抖音账号" placement="top">
-                  <el-tag size="small" type="danger">{{ platformStats.douyin }}</el-tag>
+                <el-tooltip content="Tài khoản Douyin" placement="top">
+                  <el-tag size="small" type="danger">Douyin: {{ platformStats.douyin }}</el-tag>
                 </el-tooltip>
-                <el-tooltip content="视频号账号" placement="top">
-                  <el-tag size="small" type="warning">{{ platformStats.channels }}</el-tag>
+                <el-tooltip content="Tài khoản WeChat Video" placement="top">
+                  <el-tag size="small" type="warning">WeChat: {{ platformStats.channels }}</el-tag>
                 </el-tooltip>
-                <el-tooltip content="小红书账号" placement="top">
-                  <el-tag size="small" type="info">{{ platformStats.xiaohongshu }}</el-tag>
+                <el-tooltip content="Tài khoản Xiaohongshu" placement="top">
+                  <el-tag size="small" type="info">Xiaohongshu: {{ platformStats.xiaohongshu }}</el-tag>
                 </el-tooltip>
               </div>
             </div>
           </el-card>
         </el-col>
 
-        <!-- 素材统计卡片 -->
+        <!-- Thống kê tư liệu -->
         <el-col :span="8">
           <el-card class="stat-card">
             <div class="stat-card-content">
@@ -67,31 +67,31 @@
               </div>
               <div class="stat-info">
                 <div class="stat-value">{{ contentStats.total }}</div>
-                <div class="stat-label">素材总数</div>
+                <div class="stat-label">Tổng số tư liệu</div>
               </div>
             </div>
             <div class="stat-footer">
               <div class="stat-detail">
-                <span>视频: {{ contentStats.videos }}</span>
-                <span>图片: {{ contentStats.images }}</span>
-                <span>其他: {{ contentStats.others }}</span>
+                <span>Video: {{ contentStats.videos }}</span>
+                <span>Hình ảnh: {{ contentStats.images }}</span>
+                <span>Khác: {{ contentStats.others }}</span>
               </div>
             </div>
           </el-card>
         </el-col>
       </el-row>
 
-      <!-- 快捷操作区域 -->
+      <!-- Thao tác nhanh -->
       <div class="quick-actions">
-        <h2>快捷操作</h2>
+        <h2>Thao tác nhanh</h2>
         <el-row :gutter="20">
           <el-col :span="6">
             <el-card class="action-card" @click="navigateTo('/account-management')">
               <div class="action-icon">
                 <el-icon><UserFilled /></el-icon>
               </div>
-              <div class="action-title">账号管理</div>
-              <div class="action-desc">管理所有平台账号</div>
+              <div class="action-title">Quản lý tài khoản</div>
+              <div class="action-desc">Quản lý tài khoản các nền tảng</div>
             </el-card>
           </el-col>
           <el-col :span="6">
@@ -99,8 +99,8 @@
               <div class="action-icon">
                 <el-icon><Upload /></el-icon>
               </div>
-              <div class="action-title">素材管理</div>
-              <div class="action-desc">上传和管理视频素材</div>
+              <div class="action-title">Quản lý tư liệu</div>
+              <div class="action-desc">Tải lên và quản lý video/ảnh</div>
             </el-card>
           </el-col>
           <el-col :span="6">
@@ -108,8 +108,8 @@
               <div class="action-icon">
                 <el-icon><Timer /></el-icon>
               </div>
-              <div class="action-title">发布中心</div>
-              <div class="action-desc">发布内容到各平台</div>
+              <div class="action-title">Trung tâm đăng bài</div>
+              <div class="action-desc">Đăng nội dung lên các nền tảng</div>
             </el-card>
           </el-col>
           <el-col :span="6">
@@ -117,29 +117,29 @@
               <div class="action-icon">
                 <el-icon><DataAnalysis /></el-icon>
               </div>
-              <div class="action-title">关于系统</div>
-              <div class="action-desc">查看系统信息</div>
+              <div class="action-title">Giới thiệu</div>
+              <div class="action-desc">Xem thông tin hệ thống</div>
             </el-card>
           </el-col>
         </el-row>
       </div>
 
-      <!-- 素材列表 -->
+      <!-- Danh sách tư liệu gần đây -->
       <div class="recent-tasks">
         <div class="section-header">
-          <h2>最近上传素材</h2>
-          <el-button text @click="navigateTo('/material-management')">查看全部</el-button>
+          <h2>Tư liệu tải lên gần đây</h2>
+          <el-button text @click="navigateTo('/material-management')">Xem tất cả</el-button>
         </div>
 
         <el-table :data="recentMaterials" style="width: 100%" v-loading="loading">
-          <el-table-column prop="filename" label="文件名" width="300" />
-          <el-table-column prop="filesize" label="文件大小" width="120">
+          <el-table-column prop="filename" label="Tên tệp" width="300" />
+          <el-table-column prop="filesize" label="Dung lượng" width="120">
             <template #default="scope">
               {{ scope.row.filesize }} MB
             </template>
           </el-table-column>
-          <el-table-column prop="upload_time" label="上传时间" width="200" />
-          <el-table-column label="类型" width="100">
+          <el-table-column prop="upload_time" label="Thời gian tải lên" width="200" />
+          <el-table-column label="Loại" width="100">
             <template #default="scope">
               <el-tag
                 :type="getFileTypeTag(scope.row.filename)"
@@ -152,7 +152,7 @@
           </el-table-column>
         </el-table>
 
-        <el-empty v-if="!loading && recentMaterials.length === 0" description="暂无素材数据" />
+        <el-empty v-if="!loading && recentMaterials.length === 0" description="Chưa có dữ liệu tư liệu" />
       </div>
     </div>
   </div>
@@ -178,8 +178,8 @@ const loading = ref(false)
 // 账号统计数据 - 从真实数据计算
 const accountStats = computed(() => {
   const accounts = accountStore.accounts
-  const normal = accounts.filter(a => a.status === '正常').length
-  const abnormal = accounts.filter(a => a.status !== '正常' && a.status !== '验证中').length
+  const normal = accounts.filter(a => a.status === '正常' || a.status === 'Hoạt động').length
+  const abnormal = accounts.filter(a => a.status !== '正常' && a.status !== 'Hoạt động' && a.status !== '验证中' && a.status !== 'Đang xác thực').length
   return {
     total: accounts.length,
     normal,
@@ -190,10 +190,10 @@ const accountStats = computed(() => {
 // 平台统计数据 - 从真实数据计算
 const platformStats = computed(() => {
   const accounts = accountStore.accounts
-  const kuaishou = accounts.filter(a => a.platform === '快手').length
-  const douyin = accounts.filter(a => a.platform === '抖音').length
-  const channels = accounts.filter(a => a.platform === '视频号').length
-  const xiaohongshu = accounts.filter(a => a.platform === '小红书').length
+  const kuaishou = accounts.filter(a => a.platform === '快手' || a.platform === 'Kuaishou').length
+  const douyin = accounts.filter(a => a.platform === '抖音' || a.platform === 'Douyin').length
+  const channels = accounts.filter(a => a.platform === '视频号' || a.platform === 'WeChat Channels').length
+  const xiaohongshu = accounts.filter(a => a.platform === '小红书' || a.platform === 'Xiaohongshu').length
   // 统计有账号的平台数量
   const total = [kuaishou, douyin, channels, xiaohongshu].filter(n => n > 0).length
   return { total, kuaishou, douyin, channels, xiaohongshu }
@@ -224,15 +224,15 @@ const recentMaterials = computed(() => {
 
 // 获取文件类型
 const getFileType = (filename) => {
-  if (videoExtensions.some(ext => filename.toLowerCase().endsWith(ext))) return '视频'
-  if (imageExtensions.some(ext => filename.toLowerCase().endsWith(ext))) return '图片'
-  return '其他'
+  if (videoExtensions.some(ext => filename.toLowerCase().endsWith(ext))) return 'Video'
+  if (imageExtensions.some(ext => filename.toLowerCase().endsWith(ext))) return 'Hình ảnh'
+  return 'Khác'
 }
 
 // 获取文件类型标签颜色
 const getFileTypeTag = (filename) => {
   const type = getFileType(filename)
-  return { '视频': 'success', '图片': 'warning', '其他': 'info' }[type] || 'info'
+  return { 'Video': 'success', 'Hình ảnh': 'warning', 'Khác': 'info' }[type] || 'info'
 }
 
 // 导航到指定路由
